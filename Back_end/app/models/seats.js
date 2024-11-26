@@ -39,14 +39,22 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Seats.associate = (models) => {
+
     Seats.belongsTo(models.Hall, {
       foreignKey: 'hallId',
       as: 'hall',
     });
-    Seats.belongsTo(models.Cinema, {
+    Seats.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });
+    Seats.belongsToMany(models.Booking, {
+      through: 'BookingSeats',
+      foreignKey: 'seatId',
+      otherKey: 'bookingId',
+      as: 'bookings', 
+    });
+    
   };
 
   Seats.beforeCreate(async (seat) => {

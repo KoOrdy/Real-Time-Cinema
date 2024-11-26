@@ -1,5 +1,7 @@
+
+  
 module.exports = (sequelize, DataTypes) => {
-    const Movies = sequelize.define('movies', {
+    const Movies = sequelize.define('Movies', {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -11,17 +13,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       description: {
         type: DataTypes.TEXT,
-      },
-      genre: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      duration: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       releaseDate: {
         type: DataTypes.DATE,
+        allowNull: false,
+      },
+      duration: {
+        type: DataTypes.INTEGER, // Duration in minutes
         allowNull: false,
       },
       Poster: {
@@ -31,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
     });
   
     Movies.associate = (models) => {
-      Movies.belongsToMany(models.cinemas, {
+      Movies.belongsToMany(models.Cinemas, {
         through: 'CinemaMovie',
         foreignKey: 'movieId',
         as: 'cinemas',
@@ -40,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'movieId',
         as: 'showtimes',
       });
-      Movies.hasMany(models.booking, {
+      Movies.hasMany(models.Booking, {
         foreignKey: 'movieId',
         as: 'bookings',
       });

@@ -16,11 +16,11 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Showtime.associate = (models) => {
-    Showtime.belongsTo(models.movies, {
+    Showtime.belongsTo(models.Movies, {
       foreignKey: 'movieId',
       as: 'movie',
     });
-    Showtime.belongsTo(models.cinemas, {
+    Showtime.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });
@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'hallId',
       as: 'hall',
     });
-    Showtime.hasMany(models.booking, {
+    Showtime.hasMany(models.Booking, {
       foreignKey: 'showtimeId',
       as: 'bookings',
     });

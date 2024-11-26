@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Hall.associate = (models) => {
-    Hall.belongsTo(models.cinemas, {
+    Hall.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });

@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Users = sequelize.define('users', {
+  const Users = sequelize.define('Users', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -7,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     username: {
       type: DataTypes.STRING,
-      unique: true,
       allowNull: false,
     },
     email: {
@@ -24,16 +23,17 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
   });
-  Users.associate = (models) => {
-  Users.hasOne(models.UserDetails, {
-    foreignKey: 'userId',
-    as: 'details',
-  }); 
 
-  Users.hasMany(models.Notifications, {
-    foreignKey: 'userId',
-    as: 'notifications',
-  });
-};
+  Users.associate = (models) => {
+    Users.hasMany(models.Booking, {
+      foreignKey: 'customerId',
+      as: 'bookings',
+    });
+    Users.hasMany(models.Notifications, {
+      foreignKey: 'userId',
+      as: 'notifications',
+    });
+  };
+
   return Users;
 };

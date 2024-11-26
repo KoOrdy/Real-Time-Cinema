@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Cinemas = sequelize.define('cinemas', {
+  const Cinemas = sequelize.define('Cinemas', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -20,20 +20,20 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Cinemas.associate = (models) => {
+    Cinemas.belongsTo(models.Users, {
+      foreignKey: 'vendorId',
+      as: 'vendor',
+    });
     Cinemas.hasMany(models.Hall, {
       foreignKey: 'cinemaId',
       as: 'halls',
     });
-    Cinemas.belongsToMany(models.movies, {
+    Cinemas.belongsToMany(models.Movies, {
       through: 'CinemaMovie',
       foreignKey: 'cinemaId',
       as: 'movies',
     });
-    Cinemas.belongsTo(models.users, {
-      foreignKey: 'vendorId',
-      as: 'vendor',
-    });
   };
-
+  
   return Cinemas;
 };
