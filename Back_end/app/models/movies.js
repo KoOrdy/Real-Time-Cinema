@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
+      Poster: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     });
   
     Movies.associate = (models) => {

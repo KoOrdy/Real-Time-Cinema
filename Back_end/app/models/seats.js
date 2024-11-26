@@ -8,7 +8,6 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     status: {
       type: DataTypes.ENUM('available', 'booked'),
@@ -30,6 +29,13 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id',
       },
     },
+  }, {
+    indexes: [
+      {
+        unique: true,
+        fields: ['cinemaId', 'hallId', 'name'],
+      },
+    ],
   });
 
   Seats.associate = (models) => {
@@ -43,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
-  Seats.beforeCreate(async (seat, options) => {
+  Seats.beforeCreate(async (seat) => {
     const hall = await sequelize.models.Hall.findByPk(seat.hallId);
 
     if (!hall) {
@@ -55,7 +61,6 @@ module.exports = (sequelize, DataTypes) => {
       where: { hallId: seat.hallId },
     });
 
-
     seat.name = `${hallLetter}${seatCount + 1}`;
   });
 
@@ -66,7 +71,7 @@ module.exports = (sequelize, DataTypes) => {
 async function getHallLetter(hallId, cinemaId) {
   const halls = await sequelize.models.Hall.findAll({
     where: { cinemaId },
-    order: [['id', 'ASC']], 
+    order: [['id', 'ASC']],
   });
 
   const hallIndex = halls.findIndex((hall) => hall.id === hallId);
