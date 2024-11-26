@@ -30,6 +30,7 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/user.routes")(app);
+require("./app/routes/admin.routes")(app);
 
 
 // set port, listen for requests
