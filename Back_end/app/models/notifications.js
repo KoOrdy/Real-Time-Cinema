@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      type: {
+        type: DataTypes.ENUM('Booking Confirmation', 'Vendor Booking Summary'),
+        allowNull: false,
+      },
     });
   
     Notifications.associate = (models) => {

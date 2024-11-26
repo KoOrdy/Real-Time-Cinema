@@ -28,6 +28,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'customerId',
       as: 'customer',
     });
+
+    Booking.belongsToMany(models.Seats, {
+      through: 'BookingSeats',
+      foreignKey: 'bookingId',
+      as: 'seats',
+    });
   };
 
   return Booking;

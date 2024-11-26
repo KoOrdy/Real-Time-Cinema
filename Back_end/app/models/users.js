@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     username: {
       type: DataTypes.STRING,
+      unique: true,
       allowNull: false,
     },
     email: {
@@ -23,5 +24,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
   });
+  Users.associate = (models) => {
+  Users.hasOne(models.UserDetails, {
+    foreignKey: 'userId',
+    as: 'details',
+  }); 
+
+  Users.hasMany(models.Notifications, {
+    foreignKey: 'userId',
+    as: 'notifications',
+  });
+};
   return Users;
 };

@@ -9,23 +9,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    capacity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 47,
-      validate: {
-        is: {
-          args: /^47$/,
-          msg: 'Capacity must be 47 seats.',
-        },
-      },
-    },
   });
 
   Hall.associate = (models) => {
     Hall.belongsTo(models.cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
+    });
+    Hall.hasMany(models.Seats, {
+      foreignKey: 'hallId',
+      as: 'seats',
     });
   };
 
