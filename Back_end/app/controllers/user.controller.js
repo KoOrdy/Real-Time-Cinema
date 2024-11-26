@@ -1,8 +1,9 @@
 const authMiddleware = require('./auth.controller');
-const config = require('../config/db.config'); 
+const config = require('../config/auth.config'); 
 const db = require("../models");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const tokenBlacklist = require('../middlewares/tokenblacklist');
 const User = db.users;
 const Op = db.Sequelize.Op;
 
@@ -55,6 +56,17 @@ exports.login = async (req, res) => {
         );
          res.status(200).send({ token });
 
+};
+
+exports.logout = (req, res) => {
+    const header = req.header('Authorization');
+    if (!header) {
+        return res.status(401).send({ message: 'Access denied, no token provided' });
+    }
+
+    const token = header.replace('Bearer ', '');
+    tokenBlacklist.addToken(token);
+    return res.status(200).send({ message: 'User logged out successfully.' });
 };
 
 
