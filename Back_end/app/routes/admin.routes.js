@@ -4,7 +4,8 @@ module.exports = (app) => {
     var router = require("express").Router();
 
 
-    router.post('/addvendor',authMiddleware,adminController.addVendor)
+    router.post('/',authMiddleware,adminController.addVendor)
+    router.delete('/:id', authMiddleware, adminController.deleteVendor);
 
     app.use('/api/admin',router)
   };

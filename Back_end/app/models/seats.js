@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Cinemas',
+        model: 'Hall',
         key: 'id',
       },
     },
@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Halls',
+        model: 'Cinema',
         key: 'id',
       },
     },

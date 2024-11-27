@@ -4,7 +4,7 @@ const db = require("../models");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = require('../middlewares/tokenblacklist');
-const User = db.users;
+const User = db.Users;
 const Op = db.Sequelize.Op;
 
 exports.register = async (req, res) => {
