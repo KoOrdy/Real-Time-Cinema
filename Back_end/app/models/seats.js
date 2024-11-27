@@ -13,19 +13,19 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('available', 'booked'),
       defaultValue: 'available',
     },
-    cinemaId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Hall',
-        key: 'id',
-      },
-    },
     hallId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Cinema',
+        model: 'Halls',
+        key: 'id',
+      },
+    },
+    cinemaId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Cinemas',
         key: 'id',
       },
     },
