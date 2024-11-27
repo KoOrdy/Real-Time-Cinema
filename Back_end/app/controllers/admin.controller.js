@@ -31,9 +31,9 @@ exports.addVendor = async (req,res) =>{
     });
 }
 
-exports.deleteVendor = (req, res) => {
+exports.deleteUser = (req, res) => {
     if (req.user.role!== 'admin') {
-        return res.status(403).send({ message: "You are not authorized to delete vendors." });
+        return res.status(403).send({ message: "You are not authorized to delete." });
     }
     
     const id = req.params.id;
@@ -54,4 +54,37 @@ exports.deleteVendor = (req, res) => {
         res.status(500).send({ message: "Error: " + error.message });
     });
 }
+
+exports.listVendors = (req, res) => {
+    if (req.user.role!== 'admin') {
+        return res.status(403).send({ message: "You are not authorized to list Vendors." });
+    }
+
+    User.findAll({
+        where: { role: 'vendor' },
+        attributes: ['id', 'username', 'email']
+    })
+   .then((vendors) => {
+    res.send(vendors);
+    }).catch((error) => {
+        res.status(500).send({ message: "Error: " + error.message });
+    });
+}
+exports.listCustomer = (req, res) => {
+    if (req.user.role!== 'admin') {
+        return res.status(403).send({ message: "You are not authorized to List Customers." });
+    }
+
+    User.findAll({
+        where: { role: 'customer' },
+        attributes: ['id', 'username', 'email']
+    })
+   .then((customer) => {
+    res.send(customer);
+    }).catch((error) => {
+        res.status(500).send({ message: "Error: " + error.message });
+    });
+}
+
+
 
