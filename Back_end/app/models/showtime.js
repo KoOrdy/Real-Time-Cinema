@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Showtime = sequelize.define('Showtime', {
+  const Showtimes = sequelize.define('Showtimes', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -15,24 +15,24 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
-  Showtime.associate = (models) => {
-    Showtime.belongsTo(models.Movies, {
+  Showtimes.associate = (models) => {
+    Showtimes.belongsTo(models.Movies, {
       foreignKey: 'movieId',
       as: 'movie',
     });
-    Showtime.belongsTo(models.Cinemas, {
+    Showtimes.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });
-    Showtime.belongsTo(models.Hall, {
+    Showtimes.belongsTo(models.Halls, {
       foreignKey: 'hallId',
       as: 'hall',
     });
-    Showtime.hasMany(models.Booking, {
+    Showtimes.hasMany(models.Bookings, {
       foreignKey: 'showtimeId',
       as: 'bookings',
     });
   };
 
-  return Showtime;
+  return Showtimes;
 };

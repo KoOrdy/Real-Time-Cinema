@@ -13,19 +13,19 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('available', 'booked'),
       defaultValue: 'available',
     },
-    hallId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Hall',
-        key: 'id',
-      },
-    },
     cinemaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Cinema',
+        model: 'Cinemas',
+        key: 'id',
+      },
+    },
+    hallId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Halls',
         key: 'id',
       },
     },
@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Seats.associate = (models) => {
 
-    Seats.belongsTo(models.Hall, {
+    Seats.belongsTo(models.Halls, {
       foreignKey: 'hallId',
       as: 'hall',
     });
@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });
-    Seats.belongsToMany(models.Booking, {
+    Seats.belongsToMany(models.Bookings, {
       through: 'BookingSeats',
       foreignKey: 'seatId',
       otherKey: 'bookingId',

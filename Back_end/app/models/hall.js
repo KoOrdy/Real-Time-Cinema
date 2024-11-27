@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Hall = sequelize.define('Hall', {
+  const Halls = sequelize.define('Halls', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -11,16 +11,16 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
-  Hall.associate = (models) => {
-    Hall.belongsTo(models.Cinemas, {
+  Halls.associate = (models) => {
+    Halls.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });
-    Hall.hasMany(models.Seats, {
+  Halls.hasMany(models.Seats, {
       foreignKey: 'hallId',
       as: 'seats',
     });
   };
 
-  return Hall;
+  return Halls;
 };
