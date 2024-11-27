@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Seats.associate = (models) => {
 
-    Seats.belongsTo(models.Hall, {
+    Seats.belongsTo(models.Halls, {
       foreignKey: 'hallId',
       as: 'hall',
     });
@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'cinemaId',
       as: 'cinema',
     });
-    Seats.belongsToMany(models.Booking, {
+    Seats.belongsToMany(models.Bookings, {
       through: 'BookingSeats',
       foreignKey: 'seatId',
       otherKey: 'bookingId',

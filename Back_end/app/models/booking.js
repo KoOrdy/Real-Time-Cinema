@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Booking = sequelize.define('Booking', {
+  const Bookings = sequelize.define('Bookings', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -15,18 +15,18 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
-  Booking.associate = (models) => {
-    Booking.belongsTo(models.Showtime, {
+  Bookings.associate = (models) => {
+    Bookings.belongsTo(models.Showtimes, {
       foreignKey: 'showtimeId',
       as: 'showtime',
     });
   
-    Booking.belongsTo(models.Users, {
+    Bookings.belongsTo(models.Users, {
       foreignKey: 'customerId',
       as: 'customer',
     });
   };
   
 
-  return Booking;
+  return Bookings;
 };

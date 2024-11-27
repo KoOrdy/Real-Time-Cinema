@@ -35,11 +35,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'movieId',
         as: 'cinemas',
       });
-      Movies.hasMany(models.Showtime, {
+      Movies.hasMany(models.Showtimes, {
         foreignKey: 'movieId',
         as: 'showtimes',
       });
-      Movies.hasMany(models.Booking, {
+      Movies.hasMany(models.Bookings, {
         foreignKey: 'movieId',
         as: 'bookings',
       });
