@@ -4,6 +4,8 @@ const cors = require("cors");
 const db = require("./app/models");
 const app = express();
 
+const customerRouter = require('./app/routes/customer.routes');
+
 var corsOptions = {
   origin: "http://localhost:8081"
 };
@@ -32,6 +34,7 @@ app.get("/", (req, res) => {
 require("./app/routes/user.routes")(app);
 require("./app/routes/admin.routes")(app);
 
+app.use('/api/customers' , customerRouter);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 3003;
