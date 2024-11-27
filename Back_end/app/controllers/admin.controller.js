@@ -1,6 +1,5 @@
 const db = require("../models");
 const bcrypt = require('bcrypt');
-
 const User = db.Users;
 const Op = db.Sequelize.Op;
 
@@ -39,14 +38,16 @@ exports.deleteVendor = (req, res) => {
     
     const id = req.params.id;
     User.destroy({
-        where: { id: id , role: 'vendor' },
+        where: { id: id ,  role: {
+            [Op.or]: ['vendor', 'customer']
+        } },
     })
 
     .then((num) => {
         if (num === 0) {
-            res.status(404).send({ message: "Vendor not found." });
+            res.status(404).send({ message: "user not found." });
         } else {
-            res.send({ message: `${num} Vendor deleted successfully!` });
+            res.send({ message: `${num} user deleted successfully!` });
         }
     })
     .catch((error) => {
