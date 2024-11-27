@@ -1,8 +1,10 @@
-const express = require('express');
-const customerController = require('../controllers/customer.controller');
+module.exports = (app) => {
+    const customerController = require("../controllers/customer.controller");
+    const authMiddleware = require('../controllers/auth.controller');
+    var router = require("express").Router();
 
-const router = express.Router();
+    router.get('/lastAddedMovies/:cinemaId' , authMiddleware, customerController.viewLastAddedMovies);
 
-router.get('/' , customerController.viewLastAddedMovies)
-
-module.exports = router;
+    app.use('/api/customer',router);
+  };
+  
