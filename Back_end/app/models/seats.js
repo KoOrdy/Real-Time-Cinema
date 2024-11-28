@@ -29,6 +29,14 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id',
       },
     },
+    movieId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Movies',
+        key: 'id',
+      },
+    },
   }, {
     indexes: [
       {
