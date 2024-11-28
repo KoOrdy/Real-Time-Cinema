@@ -1,31 +1,77 @@
-const db = require("../models");
-const Users = db.Users;
-const UserDetails = db.UserDetails;
-const Movies = db.Movies;
-const Cinemas = db.Cinemas;
-// const Halls = db.Halls;
-const Bookings = db.Bookings;
-const Seats = db.Seats;
-const Showtimes = db.Showtimes;
-const Notifications = db.Notifications;
+const { Movies, Cinemas, Users, UserDetails, Bookings, Seats, Showtimes, Notifications,} = require("../models");
 
+exports.viewLastAddedMovies = async (req, res) => {
+  if (req.user.role !== "customer") {
+    return res.status(403).json({ message: "You are nor authorized to view movies." });
+  }
+  try {
+    const cinemaID = req.params.cinemaId;
+    const movies = await Movies.findAll({
+      include: [
+        {
+          model: Cinemas,
+          as: "cinemas",
+          where: { id: cinemaID },
+          required: true,
+          attributes: [],
+        },
+      ],
+      attributes: ["id", "Poster", "title", "description", "createdAt"],
+      order: [["createdAt", "DESC"]],
+      limit: 5,
+    });
 
-const viewLastAddedMovies = async (req , res) => {
-    try{
-        const movies = await Movies.findAll();
-        if(movies.length === 0){
-            return res.status(404).json({ message: "No movies found" });
-        }
-        
-        res.status(200).json({ message: movies});
-
-    }catch(error){
-        console.error(error);
-        res.status(500).json({ message: error.message});
-        
+    if (!movies || !movies.length) {
+      return res.status(404).json({ message: "No movies found for this cinema." });
     }
-}
 
-module.exports = {
-    viewLastAddedMovies
+    return res.status(200).json({ message: "Movies fetched successfully", data: movies });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching movies:", data: error.message });
+  }
+};
+
+exports.viewAvailableMovies = async (req, res) => {
+  if (req.user.role !== "customer") {
+    return res.status(403).json({ message: "You are nor authorized to view movies." });
+  }
+  try {
+    const cinemaID = req.params.cinemaId;
+    const movies = await Movies.findAll({
+      include: [
+        {
+          model: Cinemas,
+          as: "cinemas",
+          where: { id: cinemaID },
+          required: true,
+          attributes: [],
+        },
+      ],
+    });
+    if (!movies || !movies.length) {
+      return res.status(404).json({ message: "No movies found for this cinema." });
+    }
+    return res.status(200).json({ message: "Movies fetched successfully", data: movies });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching movies:", data: error.message });
+  }
+};
+
+exports.viewAvailableCinemas = async (req, res) => {
+  if (req.user.role !== "customer") {
+    return res.status(403).json({ message: "You are nor authorized to view movies." });
+  }
+  try {
+    const cinemas = await Cinemas.findAll();
+
+    if (!cinemas || !cinemas.length) {
+      return res.status(404).json({ message: "No cinemas found." });
+    }
+    return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching cinemas:", data: error.message });
+  }
 };

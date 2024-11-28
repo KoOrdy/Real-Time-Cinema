@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 require("./app/routes/user.routes")(app);
 require("./app/routes/admin.routes")(app);
 require("./app/routes/vendor.routes")(app);
-app.use('/api/customers' , customerRouter);
+require("./app/routes/customer.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 3003;
