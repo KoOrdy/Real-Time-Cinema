@@ -84,3 +84,23 @@ exports.deleteCinema = async (req, res) => {
         res.status(500).send({ message: "Error: " + error.message });
     }
 };
+
+exports.viewAvailableCinemas = async (req, res) => {
+  if (req.user.role !== "vendor") {
+    return res.status(403).json({ message: "You are not authorized to view cinemas." });
+  }
+
+  try {
+    const vendorId = req.user.id; 
+    const cinemas = await Cinema.findAll({ where: { vendorId } });
+
+    if (!cinemas || cinemas.length === 0) {
+      return res.status(404).json({ message: "No cinemas found for this vendor." });
+    }
+
+    return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching cinemas.", error: error.message });
+  }
+};
