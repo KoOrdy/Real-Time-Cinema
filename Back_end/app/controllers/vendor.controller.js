@@ -1,4 +1,4 @@
-const { Movies, Cinemas } = require('../models');
+const { Movies, Cinemas, Showtimes, Halls, Notifications } = require('../models');
 
 exports.addCinema = async (req, res) => { 
     const { name, location, contactInfo } = req.body;
@@ -137,6 +137,58 @@ exports.addMovie = async (req, res) => {
         });
 
         res.status(201).send({ message: "Movie added successfully!", movie });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.updateMovie = async (req, res) => {
+    const { id } = req.params;
+    const { title, description, genre, releaseDate, duration, Poster, cinemaId } = req.body;
+
+    if (req.user.role !== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to update movies." });
+    }
+
+    try {
+        const movie = await Movies.findByPk(id);
+
+        if (!movie) {
+            return res.status(404).send({ message: "Movie not found." });
+        }
+
+        const cinema = await Cinemas.findByPk(movie.cinemaId);
+
+        if (!cinema || cinema.vendorId !== req.user.id) {
+            return res.status(403).send({ message: "You are not authorized to update this movie." });
+        }
+
+        if (cinemaId) {
+            const newCinema = await Cinemas.findOne({
+                where: { id: cinemaId, vendorId: req.user.id },
+            });
+
+            if (!newCinema) {
+                return res.status(404).send({
+                    message: "New cinema not found or you are not authorized to update movies in this cinema.",
+                });
+            }
+        }
+
+        const updatedData = {};
+        if (title) updatedData.title = title;
+        if (description) updatedData.description = description || null;
+        if (genre) updatedData.genre = genre;
+        if (releaseDate) updatedData.releaseDate = releaseDate;
+        if (duration) updatedData.duration = duration;
+        if (Poster) updatedData.Poster = Poster || null;
+        if (cinemaId) updatedData.cinemaId = cinemaId;
+
+        await movie.update(updatedData);
+
+        res.status(200).send({ message: "Movie updated successfully!", movie });
+
     } catch (error) {
         res.status(500).send({ message: "Error: " + error.message });
     }

@@ -14,20 +14,19 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
    genre: {
-  type: DataTypes.ENUM(
-    'comedy',
-    'drama',
-    'romance',
-    'action',
-    'animation',
-    'horror',
-    'sci-fi',
-    'fantasy',
-    'mystery',
-    'documentary'
-  ),
+      type: DataTypes.ENUM(
+       'comedy',
+       'drama',
+       'romance',
+       'action',
+       'animation',
+       'horror',
+       'sci-fi',
+       'fantasy',
+       'mystery',
+       'documentary'),
   allowNull: false,
-},
+   },
     releaseDate: {
       type: DataTypes.DATE,
       allowNull: false,
