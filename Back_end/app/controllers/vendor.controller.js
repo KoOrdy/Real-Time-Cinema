@@ -1,4 +1,5 @@
 const db = require("../models");
+const cinemas = require("../models/cinemas");
 const Cinema = db.Cinemas;
 const Hall = db.Halls;
 exports.addCinema = async (req, res) => {
