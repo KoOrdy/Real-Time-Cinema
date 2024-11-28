@@ -9,6 +9,8 @@ module.exports = (app) => {
     router.get('/vendor', authMiddleware, adminController.listVendors);
     router.get('/customer', authMiddleware, adminController.listCustomer);
     router.get('/movies', authMiddleware, adminController.viewMovies);
+    router.get('/movies/:cinemaId' , authMiddleware, adminController.viewAvailableMovies);
+
 
     app.use('/api/admin',router)
   };
