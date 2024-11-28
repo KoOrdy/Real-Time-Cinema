@@ -1,4 +1,6 @@
 const { Movies, Cinemas, Showtimes, Halls, Notifications } = require('../models');
+const { Op } = require('sequelize');
+
 
 exports.addCinema = async (req, res) => { 
     const { name, location, contactInfo } = req.body;
@@ -256,6 +258,63 @@ exports.viewAvailableMovies = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Error fetching movies", data: error.message });
+    }
+};
+
+exports.assignMovieToHall = async (req, res) => {
+    if (req.user.role !== 'vendor') {
+        return res.status(403).json({ message: "You are not authorized to assign movies to halls." });
+    }
+
+    const { movieId, hallId, startTime, endTime } = req.body;
+
+    if (!movieId || !hallId || !startTime || !endTime) {
+        return res.status(400).json({ message: "All fields (movieId, hallId, startTime, endTime) are required." });
+    }
+
+    try {
+        const movie = await Movies.findOne({
+            where: { id: movieId },
+            include: {
+                model: Cinemas,
+                as: 'cinema',
+                where: { vendorId: req.user.id },
+                attributes: ['id'],
+            },
+        });
+
+        if (!movie) {
+            return res.status(404).json({ message: "Movie not found or you are not authorized to assign it." });
+        }
+
+        const hall = await Halls.findOne({
+            where: { id: hallId, cinemaId: movie.cinemaId },
+        });
+
+        if (!hall) {
+            return res.status(404).json({ message: "Hall not found or does not belong to the same cinema as the movie." });
+        }
+
+        const existingShowtime = await Showtimes.findOne({
+            where: { hallId, startTime: { [Op.lt]: endTime }, endTime: { [Op.gt]: startTime } },
+        });
+
+        if (existingShowtime) {
+            return res.status(400).json({ message: "The hall is already booked for this time slot." });
+        }
+
+        const showtime = await Showtimes.create({
+            movieId,
+            hallId,
+            cinemaId: movie.cinemaId,
+            startTime,
+            endTime,
+        });
+        
+        return res.status(201).json({ message: "Movie assigned to hall and showtime created successfully!", data: showtime });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error assigning movie to hall.", data: error.message });
     }
 };
 
