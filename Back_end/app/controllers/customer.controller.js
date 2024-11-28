@@ -75,3 +75,41 @@ exports.viewAvailableCinemas = async (req, res) => {
     return res.status(500).json({ message: "Error fetching cinemas:", data: error.message });
   }
 };
+
+exports.viewMovieDetails = async (req , res) => {
+    if (req.user.role !== "customer") {
+        return res.status(403).json({ message: "You are nor authorized to view movies." });
+    }
+
+    const movieID = req.params.movieId;
+    try{
+        const movie = await Movies.findOne({ where: {id : movieID } });
+        if(!movie){
+            return res.status(404).json({ message: "No movies found." });
+        }
+
+        return res.status(200).json({ message: "Movie fetched successfully." , data: movie});
+    }catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error fetching cinemas:", data: error.message });
+    }
+};
+
+exports.viewBookedSeats = async (req , res) => {
+    if (req.user.role !== "customer") {
+        return res.status(403).json({ message: "You are nor authorized to view movies." });
+    }
+
+    try{
+        const movieID = req.params.movieId;
+        const seats = await Seats.findAll({ where: { movieId : movieID }});
+        if(!seats || !seats.length){
+          return res.status(404).json({ message: "No seats found." });
+        }
+
+        return res.status(200).json({ message: "Seats fetched successfully." , data: seats});
+    }catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Error fetching cinemas:", data: error.message });
+  };
+};

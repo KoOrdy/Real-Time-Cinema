@@ -7,5 +7,7 @@ module.exports = (app) => {
     app.post("/login", UserController.login);
 
     app.post('/logout', authMiddleware, UserController.logout);
+
+    app.post('/changePassword', authMiddleware, UserController.changePassword);
   };
   

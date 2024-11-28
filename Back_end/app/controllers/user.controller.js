@@ -70,3 +70,25 @@ exports.logout = (req, res) => {
 };
 
 
+exports.changePassword = async (req, res) => {
+    const{oldPassword, newPassword}=req.body;
+    const user = await User.findByPk(req.user.id);
+    
+    if(!oldPassword || !newPassword){
+        return res.status(400).send({ message: 'All fields are required!' });
+    }
+
+    const isValidPassword = await bcrypt.compare(oldPassword, user.password);
+    if (!isValidPassword) {
+        return res.status(401).send({ message: 'Invalid The old password!' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    
+    return res.status(200).send({message: 'password changed successfully'})    
+}
+
