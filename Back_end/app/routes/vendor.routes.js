@@ -5,6 +5,8 @@ module.exports = (app) => {
   var router = require("express").Router();
 
   router.post('/cinemas/add', authMiddleware, vendorController.addCinema);
+  router.put('/cinemas/update/:id', authMiddleware, vendorController.updateCinema);
+
 
   app.use('/api/vendor', router);
 };

@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // numOfHalls: {
+    //   type: DataTypes.INTEGER,
+    //     allowNull: false,
+    // },
     location: {
       type: DataTypes.JSON,
       allowNull: false,
