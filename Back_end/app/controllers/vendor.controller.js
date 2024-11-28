@@ -1,10 +1,10 @@
 const db = require("../models");
 const Cinema = db.Cinemas;
-
+const Hall = db.Halls;
 exports.addCinema = async (req, res) => {
-    const { name, location, contactInfo, vendorId } = req.body;
+    const { name, location, contactInfo } = req.body;
 
-    if (!['vendor', 'admin'].includes(req.user.role)) {
+    if (req.user.role !== 'vendor') {
         return res.status(403).send({ message: "You are not authorized to add cinemas." });
     }
 
@@ -12,26 +12,46 @@ exports.addCinema = async (req, res) => {
         return res.status(400).send({ message: "All fields are required!" });
     }
 
-    if (req.user.role === 'admin' && !vendorId) {
-        return res.status(400).send({ message: "Vendor ID is required." });
-    }
-
     try {
-        if (req.user.role === 'admin') {
-            const vendor = await db.Users.findOne({ where: { id: vendorId, role: 'vendor' } });
-            if (!vendor) {
-                return res.status(404).send({ message: "Vendor not found." });
-            }
-        }
-
         const cinema = await Cinema.create({
             name,
             location,
             contactInfo,
-            vendorId: req.user.role === 'vendor' ? req.user.id : vendorId,
+            vendorId: req.user.id,
         });
 
         res.status(201).send({ message: "Cinema added successfully!", cinema });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+exports.updateCinema = async (req, res) => {
+    const { id } = req.params;
+    const { name, location, contactInfo } = req.body;
+
+    if (!['vendor', 'admin'].includes(req.user.role)) {
+        return res.status(403).send({ message: "You are not authorized to update cinemas." });
+    }
+
+    try {
+        const cinema = await Cinema.findByPk(id);
+        
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found." });
+        }
+
+        if (req.user.role === 'vendor' && cinema.vendorId !== req.user.id) {
+            return res.status(403).send({ message: "You are not authorized to update this cinema." });
+        }
+
+        const updatedData = {};
+        if (name) updatedData.name = name;
+        if (location) updatedData.location = location;
+        if (contactInfo) updatedData.contactInfo = contactInfo;
+
+        await cinema.update(updatedData);
+
     } catch (error) {
         res.status(500).send({ message: "Error: " + error.message });
     }
