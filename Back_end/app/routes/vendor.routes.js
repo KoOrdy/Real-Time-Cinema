@@ -11,5 +11,7 @@ module.exports = (app) => {
 
   router.post('/movies/add', authMiddleware, vendorController.addMovie);
   router.put('/movies/update/:id', authMiddleware, vendorController.updateMovie);
+  router.delete('/movies/delete/:id', authMiddleware, vendorController.deleteMovie);
+  router.get('/movies/:cinemaId', authMiddleware, vendorController.viewAvailableMovies);
   app.use('/api/vendor', router);
 };

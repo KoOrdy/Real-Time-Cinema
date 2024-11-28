@@ -193,3 +193,70 @@ exports.updateMovie = async (req, res) => {
         res.status(500).send({ message: "Error: " + error.message });
     }
 };
+
+
+exports.deleteMovie = async (req, res) => {
+    try {
+        if (req.user.role !== 'vendor') {
+            return res.status(403).send({ message: "You are not authorized to delete movies." });
+        }
+
+        const id = req.params.id;
+
+        const movie = await Movies.findByPk(id, {
+            include: {
+                model: Cinemas,
+                as: 'cinema',
+                where: { vendorId: req.user.id },
+                attributes: ['id'], 
+            },
+        });
+
+        if (!movie) {
+            return res.status(404).send({ message: "Movie not found or you are not authorized to delete it." });
+        }
+
+        await Movies.destroy({
+            where: { id: id },
+        });
+
+        res.send({ message: "Movie deleted successfully!" });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.viewAvailableMovies = async (req, res) => {
+    if (req.user.role !== "vendor") {
+        return res.status(403).json({ message: "You are not authorized to view movies." });
+    }
+
+    try {
+        const cinemaID = req.params.cinemaId;
+
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaID, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found or you are not authorized to view its movies." });
+        }
+
+        const movies = await Movies.findAll({
+            where: { cinemaId: cinemaID }, 
+            attributes: ['id', 'title', 'genre', 'releaseDate', 'duration', 'description', 'Poster'], 
+        });
+
+        if (!movies || !movies.length) {
+            return res.status(404).json({ message: "No movies found for this cinema." });
+        }
+
+        return res.status(200).json({ message: "Movies fetched successfully!", data: movies });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error fetching movies", data: error.message });
+    }
+};
+
+//-------------------------------------------------------------------------------------------\\
