@@ -51,6 +51,7 @@ exports.updateCinema = async (req, res) => {
         if (contactInfo) updatedData.contactInfo = contactInfo;
 
         await cinema.update(updatedData);
+        res.status(200).send({ message: "Cinema updated successfully!", cinema });
 
     } catch (error) {
         res.status(500).send({ message: "Error: " + error.message });
