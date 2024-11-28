@@ -6,6 +6,8 @@ module.exports = (app) => {
     router.get('/cinemas' , authMiddleware, customerController.viewAvailableCinemas);
     router.get('/lastAddedMovies/:cinemaId' , authMiddleware, customerController.viewLastAddedMovies);
     router.get('/movies/:cinemaId' , authMiddleware, customerController.viewAvailableMovies);
+    router.get('/movie/:movieId' , authMiddleware, customerController.viewMovieDetails);
+    router.get('/BookedSeats/:movieId' , authMiddleware, customerController.viewBookedSeats);
 
     app.use('/api/customer',router);
   };
