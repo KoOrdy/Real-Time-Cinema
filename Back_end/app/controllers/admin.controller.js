@@ -1,6 +1,7 @@
 const db = require("../models");
 const bcrypt = require('bcrypt');
 const User = db.Users;
+const Movies = db.Movies;
 const Op = db.Sequelize.Op;
 
 exports.addVendor = async (req,res) =>{
@@ -86,5 +87,16 @@ exports.listCustomer = (req, res) => {
     });
 }
 
+exports.viewMovies = (req, res) => {
 
+    Movies.findAll({
+        attributes: ['id', 'title', 'description', 'releaseDate', 'duration', 'Poster']
+    })
+   .then((movies) => {
+    return res.send(movies);
+   }).catch((error) => {
+    res.status(500).send({message: "Error: " + error.message})
+   });
+
+}
 
