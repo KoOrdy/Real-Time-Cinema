@@ -101,7 +101,7 @@ exports.viewMovies = (req, res) => {
 }
 
 exports.viewAvailableMovies = async (req, res) => {
-    if (req.user.role !== "customer") {
+    if (req.user.role !== "admin") {
       return res.status(403).json({ message: "You are nor authorized to view movies." });
     }
     try {
