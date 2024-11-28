@@ -8,5 +8,7 @@ module.exports = (app) => {
   router.put('/cinemas/update/:id', authMiddleware, vendorController.updateCinema);
   router.delete('/cinemas/delete/:id', authMiddleware, vendorController.deleteCinema);
   router.get('/cinemas/', authMiddleware, vendorController.viewAvailableCinemas);
+
+  router.post('/movies/add', authMiddleware, vendorController.addMovie);
   app.use('/api/vendor', router);
 };

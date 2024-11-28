@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    // numOfHalls: {
-    //   type: DataTypes.INTEGER,
-    //     allowNull: false,
-    // },
     location: {
       type: DataTypes.JSON,
       allowNull: false,
@@ -24,20 +20,21 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Cinemas.associate = (models) => {
+    Cinemas.hasMany(models.Movies, {
+      foreignKey: 'cinemaId',
+      as: 'movies',
+    });
+
     Cinemas.belongsTo(models.Users, {
       foreignKey: 'vendorId',
       as: 'vendor',
     });
+
     Cinemas.hasMany(models.Halls, {
       foreignKey: 'cinemaId',
       as: 'halls',
     });
-    Cinemas.belongsToMany(models.Movies, {
-      through: 'CinemaMovie',
-      foreignKey: 'cinemaId',
-      as: 'movies',
-    });
   };
-  
+
   return Cinemas;
 };

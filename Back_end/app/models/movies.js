@@ -1,52 +1,61 @@
 module.exports = (sequelize, DataTypes) => {
-    const Movies = sequelize.define('Movies', {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      title: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      genre: {
+  const Movies = sequelize.define('Movies', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    genre: {
       type: DataTypes.ENUM('comedy', 'drama', 'romance'),
       allowNull: false,
     },
-      releaseDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
+    releaseDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    duration: {
+      type: DataTypes.INTEGER, // Duration in minutes
+      allowNull: false,
+    },
+    Poster: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    cinemaId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Cinemas',
+        key: 'id',
       },
-      duration: {
-        type: DataTypes.INTEGER, // Duration in minutes
-        allowNull: false,
-      },
-      Poster: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
+      onDelete: 'CASCADE', // Delete movie if the related cinema is deleted
+      allowNull: false,
+    },
+  });
+
+  Movies.associate = (models) => {
+    Movies.belongsTo(models.Cinemas, {
+      foreignKey: 'cinemaId',
+      as: 'cinema',
     });
-  
-    Movies.associate = (models) => {
-      Movies.belongsToMany(models.Cinemas, {
-        through: 'CinemaMovie',
-        foreignKey: 'movieId',
-        as: 'cinemas',
-      });
-      Movies.hasMany(models.Showtimes, {
-        foreignKey: 'movieId',
-        as: 'showtimes',
-      });
-      Movies.hasMany(models.Bookings, {
-        foreignKey: 'movieId',
-        as: 'bookings',
-      });
-    };
-  
-    return Movies;
+
+    Movies.hasMany(models.Showtimes, {
+      foreignKey: 'movieId',
+      as: 'showtimes',
+    });
+
+    Movies.hasMany(models.Bookings, {
+      foreignKey: 'movieId',
+      as: 'bookings',
+    });
   };
-  
+
+  return Movies;
+};

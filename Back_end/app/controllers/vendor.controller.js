@@ -1,8 +1,6 @@
-const db = require("../models");
-const cinemas = require("../models/cinemas");
-const Cinema = db.Cinemas;
-const Hall = db.Halls;
-exports.addCinema = async (req, res) => {
+const { Movies, Cinemas } = require('../models');
+
+exports.addCinema = async (req, res) => { 
     const { name, location, contactInfo } = req.body;
 
     if (req.user.role !== 'vendor') {
@@ -14,7 +12,7 @@ exports.addCinema = async (req, res) => {
     }
 
     try {
-        const cinema = await Cinema.create({
+        const cinema = await Cinemas.create({
             name,
             location,
             contactInfo,
@@ -36,7 +34,7 @@ exports.updateCinema = async (req, res) => {
     }
 
     try {
-        const cinema = await Cinema.findByPk(id);
+        const cinema = await Cinemas.findByPk(id);
         
         if (!cinema) {
             return res.status(404).send({ message: "Cinema not found." });
@@ -67,7 +65,7 @@ exports.deleteCinema = async (req, res) => {
 
         const id = req.params.id;
 
-        const cinema = await Cinema.findOne({
+        const cinema = await Cinemas.findOne({
             where: { id: id, vendorId: req.user.id },
         });
 
@@ -75,7 +73,7 @@ exports.deleteCinema = async (req, res) => {
             return res.status(404).send({ message: "Cinema not found or you do not have access to delete it." });
         }
 
-        await Cinema.destroy({
+        await Cinemas.destroy({
             where: { id: id },
         });
 
@@ -92,15 +90,54 @@ exports.viewAvailableCinemas = async (req, res) => {
 
   try {
     const vendorId = req.user.id; 
-    const cinemas = await Cinema.findAll({ where: { vendorId } });
+    const cinemas = await Cinemas.findAll({ where: { vendorId } });
 
     if (!cinemas || cinemas.length === 0) {
       return res.status(404).json({ message: "No cinemas found for this vendor." });
     }
 
-    return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas });
+    return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Error fetching cinemas.", error: error.message });
   }
+};
+
+//-------------------------------------------------------------------------------------------\\
+
+exports.addMovie = async (req, res) => {
+    const { title, description, genre, releaseDate, duration, Poster, cinemaId } = req.body;
+
+    if (req.user.role !== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to add movies." });
+    }
+
+    if (!title || !genre || !releaseDate || !duration || !cinemaId) {
+        return res.status(400).send({ message: "All required fields (title, genre, releaseDate, duration, cinemaId) must be provided!" });
+    }
+
+    try {
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found or you are not authorized to add movies to this cinema." });
+        }
+
+        const movie = await Movies.create({
+            title,
+            description: description || null,
+            genre,
+            releaseDate,
+            duration,
+            Poster: Poster || null,
+            vendorId: req.user.id,
+            cinemaId, 
+        });
+
+        res.status(201).send({ message: "Movie added successfully!", movie });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
 };
