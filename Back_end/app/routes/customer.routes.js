@@ -3,7 +3,9 @@ module.exports = (app) => {
     const authMiddleware = require('../controllers/auth.controller');
     var router = require("express").Router();
 
+    router.get('/cinemas' , authMiddleware, customerController.viewAvailableCinemas);
     router.get('/lastAddedMovies/:cinemaId' , authMiddleware, customerController.viewLastAddedMovies);
+    router.get('/movies/:cinemaId' , authMiddleware, customerController.viewAvailableMovies);
 
     app.use('/api/customer',router);
   };
