@@ -56,3 +56,29 @@ exports.updateCinema = async (req, res) => {
         res.status(500).send({ message: "Error: " + error.message });
     }
 };
+
+exports.deleteCinema = async (req, res) => {
+    try {
+        if (req.user.role !== 'vendor') {
+            return res.status(403).send({ message: "You are not authorized to delete cinemas." });
+        }
+
+        const id = req.params.id;
+
+        const cinema = await Cinema.findOne({
+            where: { id: id, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found or you do not have access to delete it." });
+        }
+
+        await Cinema.destroy({
+            where: { id: id },
+        });
+
+        res.send({ message: "Cinema deleted successfully!" });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
