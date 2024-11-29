@@ -1,5 +1,8 @@
-const { Movies, Cinemas, Showtimes, Halls, Notifications } = require('../models');
+const { Movies, Cinemas, Showtimes, Halls, Notifications ,Bookings ,Users } = require('../models');
 const { Op } = require('sequelize');
+const nodemailer = require('nodemailer');
+const emailConfig = require('../config/email.config');
+const transporter = nodemailer.createTransport(emailConfig);
 
 
 exports.addCinema = async (req, res) => { 
@@ -352,6 +355,64 @@ exports.addShowtime = async (req, res) => {
 
         res.status(201).send({ message: "Showtime added successfully!", showtime });
     } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.updateShowTime = async (req, res) => {
+    const { date, startTime, endTime } = req.body;
+    const { id } = req.params;
+
+    if (req.user.role !== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to update showtimes." });
+    }
+
+    try {
+        const showtime = await Showtimes.findByPk(id);
+
+        if (!showtime) {
+            return res.status(404).send({ message: "Showtime not found!" });
+        }
+
+        if (date) showtime.date = date;
+        if (startTime) showtime.startTime = startTime;
+        if (endTime) showtime.endTime = endTime;
+        await showtime.save();
+
+        const bookings = await Bookings.findAll({ where: { showtimeId: id } });
+
+        if (bookings.length === 0) {
+            return res.status(200).send({ 
+                message: "Showtime updated successfully, but no customers booked this showtime.", 
+                showtime 
+            });
+        }
+
+        const customerIds = bookings.map(booking => booking.customerId);
+
+        const customers = await Users.findAll({
+            where: { id: customerIds },
+            attributes: ['id', 'email']
+        });
+
+        for (const customer of customers) {
+            const mailOptions = {
+                from: emailConfig.auth.user,
+                to: customer.email,
+                subject: 'Showtime Updated',
+                text: `Dear Customer,\n\nThe showtime you booked has been updated. Here are the new details:\n\nDate: ${date || showtime.date}\nStart Time: ${startTime || showtime.startTime}\nEnd Time: ${endTime || showtime.endTime}\n\n Thank you for your understanding.\n\nRegards❤️, `
+            };
+
+            await transporter.sendMail(mailOptions);
+        }
+
+        res.status(200).send({ 
+            message: "Showtime updated successfully, and emails sent to customers.", 
+            showtime 
+        });
+    } catch (error) {
+        console.error(error);
         res.status(500).send({ message: "Error: " + error.message });
     }
 };
