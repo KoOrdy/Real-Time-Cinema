@@ -27,10 +27,6 @@ module.exports = (sequelize, DataTypes) => {
        'documentary'),
   allowNull: false,
    },
-    releaseDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
     duration: {
       type: DataTypes.INTEGER, // Duration in minutes
       allowNull: false,

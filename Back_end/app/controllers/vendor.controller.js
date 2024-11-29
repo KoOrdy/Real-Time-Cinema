@@ -108,14 +108,14 @@ exports.viewAvailableCinemas = async (req, res) => {
 //-------------------------------------------------------------------------------------------\\
 
 exports.addMovie = async (req, res) => {
-    const { title, description, genre, releaseDate, duration, Poster, cinemaId } = req.body;
+    const { title, description, genre, duration, Poster, cinemaId } = req.body;
 
     if (req.user.role !== 'vendor') {
         return res.status(403).send({ message: "You are not authorized to add movies." });
     }
 
-    if (!title || !genre || !releaseDate || !duration || !cinemaId) {
-        return res.status(400).send({ message: "All required fields (title, genre, releaseDate, duration, cinemaId) must be provided!" });
+    if (!title || !genre || !duration || !cinemaId) {
+        return res.status(400).send({ message: "All required fields (title, genre, duration, cinemaId) must be provided!" });
     }
 
     try {
@@ -131,7 +131,6 @@ exports.addMovie = async (req, res) => {
             title,
             description: description || null,
             genre,
-            releaseDate,
             duration,
             Poster: Poster || null,
             vendorId: req.user.id,
@@ -147,7 +146,7 @@ exports.addMovie = async (req, res) => {
 
 exports.updateMovie = async (req, res) => {
     const { id } = req.params;
-    const { title, description, genre, releaseDate, duration, Poster, cinemaId } = req.body;
+    const { title, description, genre, duration, Poster, cinemaId } = req.body;
 
     if (req.user.role !== 'vendor') {
         return res.status(403).send({ message: "You are not authorized to update movies." });
@@ -182,7 +181,6 @@ exports.updateMovie = async (req, res) => {
         if (title) updatedData.title = title;
         if (description) updatedData.description = description || null;
         if (genre) updatedData.genre = genre;
-        if (releaseDate) updatedData.releaseDate = releaseDate;
         if (duration) updatedData.duration = duration;
         if (Poster) updatedData.Poster = Poster || null;
         if (cinemaId) updatedData.cinemaId = cinemaId;
@@ -247,7 +245,7 @@ exports.viewAvailableMovies = async (req, res) => {
 
         const movies = await Movies.findAll({
             where: { cinemaId: cinemaID }, 
-            attributes: ['id', 'title', 'genre', 'releaseDate', 'duration', 'description', 'Poster'], 
+            attributes: ['id', 'title', 'genre', 'duration', 'description', 'Poster'], 
         });
 
         if (!movies || !movies.length) {
@@ -258,63 +256,6 @@ exports.viewAvailableMovies = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Error fetching movies", data: error.message });
-    }
-};
-
-exports.assignMovieToHall = async (req, res) => {
-    if (req.user.role !== 'vendor') {
-        return res.status(403).json({ message: "You are not authorized to assign movies to halls." });
-    }
-
-    const { movieId, hallId, startTime, endTime } = req.body;
-
-    if (!movieId || !hallId || !startTime || !endTime) {
-        return res.status(400).json({ message: "All fields (movieId, hallId, startTime, endTime) are required." });
-    }
-
-    try {
-        const movie = await Movies.findOne({
-            where: { id: movieId },
-            include: {
-                model: Cinemas,
-                as: 'cinema',
-                where: { vendorId: req.user.id },
-                attributes: ['id'],
-            },
-        });
-
-        if (!movie) {
-            return res.status(404).json({ message: "Movie not found or you are not authorized to assign it." });
-        }
-
-        const hall = await Halls.findOne({
-            where: { id: hallId, cinemaId: movie.cinemaId },
-        });
-
-        if (!hall) {
-            return res.status(404).json({ message: "Hall not found or does not belong to the same cinema as the movie." });
-        }
-
-        const existingShowtime = await Showtimes.findOne({
-            where: { hallId, startTime: { [Op.lt]: endTime }, endTime: { [Op.gt]: startTime } },
-        });
-
-        if (existingShowtime) {
-            return res.status(400).json({ message: "The hall is already booked for this time slot." });
-        }
-
-        const showtime = await Showtimes.create({
-            movieId,
-            hallId,
-            cinemaId: movie.cinemaId,
-            startTime,
-            endTime,
-        });
-        
-        return res.status(201).json({ message: "Movie assigned to hall and showtime created successfully!", data: showtime });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error assigning movie to hall.", data: error.message });
     }
 };
 
