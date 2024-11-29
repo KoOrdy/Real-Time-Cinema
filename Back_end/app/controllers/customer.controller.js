@@ -1,7 +1,9 @@
-const { where } = require("sequelize");
 const { Movies, Cinemas, Halls , Users, UserDetails, Bookings, Seats, Showtimes, Notifications,} = require("../models");
 const db = require("../models");
 const op = db.Sequelize.Op;
+const jwt = require('jsonwebtoken');
+const config = require('../config/auth.config'); 
+
 
 exports.viewAvailableCinemas = async (req, res) => {
   if (req.user.role !== "customer") {
@@ -16,7 +18,7 @@ exports.viewAvailableCinemas = async (req, res) => {
     return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Error fetching cinemas:", data: error.message });
+    return res.status(500).json({ message: "Error fetching cinemas.", data: error.message });
   }
 };
 
@@ -43,7 +45,7 @@ exports.viewLastAddedMovies = async (req, res) => {
     return res.status(200).json({ message: "Movies fetched successfully", data: movies });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Error fetching movies:", data: error.message });
+    return res.status(500).json({ message: "Error fetching movies.", data: error.message });
   }
 };
 
@@ -60,10 +62,10 @@ exports.viewAvailableMovies = async (req, res) => {
     if (!movies.length) {
       return res.status(404).json({ message: "No movies found for this cinema." });
     }
-    return res.status(200).json({ message: "Movies fetched successfully", data: movies });
+    return res.status(200).json({ message: "Movies fetched successfully.", data: movies });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Error fetching movies:", data: error.message });
+    return res.status(500).json({ message: "Error fetching movies.", data: error.message });
   }
 };
 
@@ -136,7 +138,7 @@ exports.viewMovieDetails = async (req, res) => {
     });
 
     if (!movie) {
-      return res.status(404).json({ message: "No movie found for the provided cinema." });
+      return res.status(404).json({ message: "No movie found for this cinema." });
     }
 
     const movieDetails = {
@@ -155,10 +157,7 @@ exports.viewMovieDetails = async (req, res) => {
       }],
     };
 
-    return res.status(200).json({
-      message: "Movie details fetched successfully.",
-      data: movieDetails,
-    });
+    return res.status(200).json({ message: "Movie details fetched successfully.", data: movieDetails, });
 
   } catch (error) {
     console.error(error);
@@ -189,7 +188,7 @@ exports.viewBookedSeats = async (req, res) => {
       });
 
       if (!BookedSeats.length) {
-          return res.status(404).json({ message: "No bookings found for this movie in the specified cinema." });
+          return res.status(404).json({ message: "No bookings found for this movie." });
       }
 
       const seatIds = BookedSeats.map(booking => booking.seats).flat(); 
@@ -208,7 +207,7 @@ exports.viewBookedSeats = async (req, res) => {
 
   } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: "Error fetching seats:", data: error.message });
+      return res.status(500).json({ message: "Error fetching seats.", data: error.message });
   }
 };
 
@@ -276,7 +275,7 @@ exports.filterMovies = async (req, res) => {
     return res.status(200).json({ message: "Movies fetched successfully.", data: movies });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Error searching for movies", data: error.message });
+    return res.status(500).json({ message: "Error filtering for movies", data: error.message });
   }
 };
 
@@ -409,7 +408,47 @@ exports.viewMyBookings = async (req , res) => {
 
   }catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Error canceling booking.", error: error.message });
+    return res.status(500).json({ message: "Error view bookings.", error: error.message });
   };
 };
+
+exports.updateInfo = async (req , res) => {
+  if (req.user.role !== "customer") {
+    return res.status(403).json({ message: "You are not authorized to update information." });
+  }
+
+  try{
+    const customerID = req.user.id;
+    const { username , email , phoneNumber , address , profilePicture} = req.body;
+    
+    const userUpdateData = {}
+    if(username) userUpdateData.username = username;
+    if(email) userUpdateData.email = email;
+
+    const userDetailsUpdateData = {};
+    if(phoneNumber) userDetailsUpdateData.phoneNumber = phoneNumber;
+    if(address) userDetailsUpdateData.address = address;
+    if (profilePicture !== undefined) userDetailsUpdateData.profilePicture = profilePicture;
+
+    if (Object.keys(userUpdateData).length > 0) {
+      await Users.update(userUpdateData, { where: { id: customerID } });
+    }
+    if (Object.keys(userDetailsUpdateData).length > 0) {
+      await UserDetails.update(userDetailsUpdateData, { where: { userId: customerID } });
+    }
+
+    const updatedUsername = username || req.user.username;
+    const token = jwt.sign(
+      { id: customerID, username: updatedUsername ,role: 'customer'}, 
+      config.secret, 
+      { expiresIn: '1h' }
+    );
+    return res.status(200).json({ message: "Information updated successfully." , token: token})
+
+  }catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error updating user information.", error: error.message });
+  };
+};
+
 

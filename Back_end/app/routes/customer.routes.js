@@ -17,6 +17,8 @@ module.exports = (app) => {
     router.get('/bookings' , authMiddleware, customerController.viewMyBookings);
 
     // router.post('/bookings' , authMiddleware, customerController.bookSeats);
+
+    router.patch('/updateInfo' , authMiddleware, customerController.updateInfo);
     
     
 
