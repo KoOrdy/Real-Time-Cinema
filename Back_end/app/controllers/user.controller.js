@@ -126,7 +126,7 @@ exports.resetPassword = async (req, res) => {
         from: emailConfig.auth.user,
         to: email,
         subject: 'Password Reset Notification',
-        text: `Your password has been reset successfully.\n\nYour new password is: ${newPassword}\n\nPlease keep it secure!`
+        text: `Hey ${user.username} :)\n\nYour password has been reset successfully.\n\nYour new password is: ${newPassword}\n\nPlease keep it secure!`
       };
   
       await transporter.sendMail(mailOptions);
