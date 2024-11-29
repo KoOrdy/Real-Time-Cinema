@@ -319,3 +319,73 @@ exports.assignMovieToHall = async (req, res) => {
 };
 
 //-------------------------------------------------------------------------------------------\\
+
+exports.addHall = async (req, res) => {
+    const { name, cinemaId } = req.body;
+
+    if (req.user.role !== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to add halls." });
+    }
+
+    if (!name || !cinemaId) {
+        return res.status(400).send({ message: "Both 'name' and 'cinemaId' are required!" });
+    }
+
+    const hallNameRegex = /^[A-Z]$/;
+    if (!hallNameRegex.test(name)) {
+        return res.status(400).send({ message: "Hall name must be a single uppercase letter (A-Z)." });
+    }
+
+    try {
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found or you are not authorized to add halls to this cinema." });
+        }
+
+        const hall = await Halls.create({
+            name,
+            cinemaId,
+        });
+
+        res.status(201).send({ message: "Hall added successfully!", hall });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.getHallsByCinema = async (req, res) => {
+    const { cinemaId } = req.params;
+
+    if (req.user.role !== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to view halls." });
+    }
+
+    if (!cinemaId) {
+        return res.status(400).send({ message: "Cinema ID is required!" });
+    }
+
+    try {
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found or you are not authorized to view halls for this cinema." });
+        }
+
+        const halls = await Halls.findAll({
+            where: { cinemaId },
+            attributes: ['id', 'name'],
+        });
+
+        res.status(200).send({ message: "Halls retrieved successfully!", halls });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+//-------------------------------------------------------------------------------------------\\
