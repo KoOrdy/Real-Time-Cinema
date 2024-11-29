@@ -4,8 +4,17 @@ const db = require("../models");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = require('../middlewares/tokenblacklist');
+const nodemailer = require('nodemailer');
+const emailConfig = require('../config/email.config');
+const transporter = nodemailer.createTransport(emailConfig);
+const crypto = require('crypto');
 const User = db.Users;
 const Op = db.Sequelize.Op;
+
+
+function RandomPass(length = 12) {
+    return crypto.randomBytes(length).toString('hex').slice(0, length); 
+  }
 
 exports.register = async (req, res) => {
     const { username, email, password} = req.body;
@@ -92,3 +101,39 @@ exports.changePassword = async (req, res) => {
     return res.status(200).send({message: 'password changed successfully'})    
 }
 
+
+exports.resetPassword = async (req, res) => {
+    try {
+      const { email } = req.body; 
+  
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+  
+      const user = await User.findOne({ where: { email } });
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      const newPassword = RandomPass();
+  
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      await User.update({ password: hashedPassword }, { where: { email } });
+  
+      const mailOptions = {
+        from: emailConfig.auth.user,
+        to: email,
+        subject: 'Password Reset Notification',
+        text: `Your password has been reset successfully.\n\nYour new password is: ${newPassword}\n\nPlease keep it secure!`
+      };
+  
+      await transporter.sendMail(mailOptions);
+  
+      res.status(200).json({ message: 'Password reset successfully and email sent' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'An error occurred', error });
+    }
+  };

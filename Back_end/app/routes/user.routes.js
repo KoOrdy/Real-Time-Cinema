@@ -9,5 +9,7 @@ module.exports = (app) => {
     app.post('/logout', authMiddleware, UserController.logout);
 
     app.post('/changePassword', authMiddleware, UserController.changePassword);
+
+    app.post('/resetpassword',UserController.resetPassword);
   };
   
