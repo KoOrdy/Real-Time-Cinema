@@ -20,5 +20,6 @@ module.exports = (app) => {
 
   router.post('/showtimes/add', authMiddleware, vendorController.addShowtime);
   router.put('/showtimes/update/:id', authMiddleware, vendorController.updateShowTime);
+  router.delete('/showtimes/delete/:id', authMiddleware, vendorController.deleteShowtime);
   app.use('/api/vendor', router);
 };

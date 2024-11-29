@@ -371,7 +371,7 @@ exports.updateShowTime = async (req, res) => {
     try {
         const showtime = await Showtimes.findByPk(id);
 
-        if (!showtime) {
+        if (!showtime || !showtime.vendorId !== res.user.id) {
             return res.status(404).send({ message: "Showtime not found!" });
         }
 
@@ -412,7 +412,31 @@ exports.updateShowTime = async (req, res) => {
             showtime 
         });
     } catch (error) {
-        console.error(error);
         res.status(500).send({ message: "Error: " + error.message });
     }
 };
+
+exports.deleteShowtime = async (req, res) => {
+    const { id } = req.params;
+    
+    if (req.user.role!== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to delete showtimes." });
+    }
+
+    try{
+        const showtime = await Showtimes.findByPk(id);
+
+        if (!showtime || showtime.vendorId!== req.user.id) {
+            return res.status(404).send({ message: "Showtime not found or you do not have access to delete it." });
+        }
+
+        await Showtimes.destroy({
+            where: { id: id },
+        });
+
+        res.status(200).send({ message: "Showtime deleted successfully!" });
+    }catch(error){
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+
+}
