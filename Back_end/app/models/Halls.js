@@ -5,9 +5,20 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        is: /^[A-Z]$/,
+      },
+    },
     cinemaId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: 'Cinemas',
+        key: 'id',
+      },
     },
   });
 
@@ -20,6 +31,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'hallId',
       as: 'seats',
     });
+    Halls.hasMany(models.Showtimes, {
+      foreignKey: 'hallId',
+      as: 'showtimes',
+    });
   };
 
   Halls.afterCreate(async (hall, options) => {
@@ -28,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
       seats.push({
         name: `Seat-${i}`,
         hallId: hall.id,
-        cinemaId: hall.cinemaId, 
+        cinemaId: hall.cinemaId,
       });
     }
 

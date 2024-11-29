@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     location: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
+      unique: true,
       allowNull: false,
     },
     contactInfo: {
