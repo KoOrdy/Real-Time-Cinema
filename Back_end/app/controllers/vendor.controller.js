@@ -330,3 +330,28 @@ exports.getHallsByCinema = async (req, res) => {
 };
 
 //-------------------------------------------------------------------------------------------\\
+
+exports.addShowtime = async (req, res) => {
+    const { date, startTime, endTime } = req.body;
+
+    if (req.user.role !== 'vendor') {
+        return res.status(403).send({ message: "You are not authorized to add showtimes." });
+    }
+
+    if (!date || !startTime || !endTime) {
+        return res.status(400).send({ message: "All required fields (date, startTime, endTime) must be provided!" });
+    }
+
+    try {
+        const showtime = await Showtimes.create({
+            date,
+            startTime,
+            endTime,
+            vendorId: req.user.id,
+        });
+
+        res.status(201).send({ message: "Showtime added successfully!", showtime });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};

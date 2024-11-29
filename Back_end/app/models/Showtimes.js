@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Movies',
         key: 'id',
       },
-      allowNull: false,
+      allowNull: true,
     },
     cinemaId: {
       type: DataTypes.INTEGER,
@@ -19,18 +19,18 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Cinemas',
         key: 'id',
       },
-      allowNull: false,
+      allowNull: true,
     },
     hallId: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'Halls', 
+        model: 'Halls',
         key: 'id',
       },
-      allowNull: false,
+      allowNull: true,
     },
     date: {
-      type: DataTypes.DATEONLY, 
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
     startTime: {
@@ -44,7 +44,8 @@ module.exports = (sequelize, DataTypes) => {
     vendorId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    },
+    }
+  }, {
     indexes: [
       {
         unique: true,

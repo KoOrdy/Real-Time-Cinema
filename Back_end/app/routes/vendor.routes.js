@@ -17,5 +17,7 @@ module.exports = (app) => {
 
   router.post('/halls/add', authMiddleware, vendorController.addHall);
   router.get('/halls/:cinemaId', authMiddleware, vendorController.getHallsByCinema);
+
+  router.post('/showtimes/add', authMiddleware, vendorController.addShowtime);
   app.use('/api/vendor', router);
 };
