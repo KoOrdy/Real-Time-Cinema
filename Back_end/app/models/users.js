@@ -6,18 +6,21 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     username: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(50),
       unique: true,
       allowNull: false,
     },
     email: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       unique: true,
       allowNull: false,
     },
     password: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(255),
       allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING(20),
     },
     role: {
       type: DataTypes.ENUM('admin', 'vendor', 'customer'),
@@ -26,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Users.associate = (models) => {
+    Users.hasMany(models.Cinemas, {
+      foreignKey: 'vendorId',
+      as: 'cinemas',
+    });
     Users.hasMany(models.Bookings, {
       foreignKey: 'customerId',
       as: 'bookings',

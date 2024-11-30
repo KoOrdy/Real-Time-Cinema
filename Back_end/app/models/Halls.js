@@ -1,54 +1,58 @@
 module.exports = (sequelize, DataTypes) => {
-  const Halls = sequelize.define('Halls', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        is: /^[A-Z]$/,
+  const Halls = sequelize.define(
+    'Halls',
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      cinemaId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      capacity: {
+        type: DataTypes.INTEGER,
+        defaultValue: 47,
       },
     },
-    cinemaId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Cinemas',
-        key: 'id',
-      },
-    },
-  });
+    {
+      indexes: [
+        {
+          unique: true,
+          fields: ['cinemaId', 'name'], // Unique hall names within the same cinema
+        },
+      ],
+    }
+  );
 
   Halls.associate = (models) => {
     Halls.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
+      onDelete: 'CASCADE',
     });
     Halls.hasMany(models.Seats, {
       foreignKey: 'hallId',
       as: 'seats',
     });
+    Halls.hasMany(models.Movies, {
+      foreignKey: 'hallId',
+      as: 'movies',
+    });
     Halls.hasMany(models.Showtimes, {
       foreignKey: 'hallId',
-      as: 'showtimes',
+      as: 'Showtimes',
+    });
+    Halls.hasMany(models.Bookings, {
+      foreignKey: 'hallId',
+      as: 'bookings',
     });
   };
-
-  Halls.afterCreate(async (hall, options) => {
-    const seats = [];
-    for (let i = 1; i <= 47; i++) {
-      seats.push({
-        name: `Seat-${i}`,
-        hallId: hall.id,
-        cinemaId: hall.cinemaId,
-      });
-    }
-
-    await sequelize.models.Seats.bulkCreate(seats);
-  });
 
   return Halls;
 };

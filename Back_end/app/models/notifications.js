@@ -1,5 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
-    const Notifications = sequelize.define('Notifications', {
+  const Notifications = sequelize.define(
+    'Notifications',
+    {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -8,28 +10,29 @@ module.exports = (sequelize, DataTypes) => {
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-          model: 'Users',
-          key: 'id',
-        },
-      },
-      message: {
-        type: DataTypes.STRING,
-        allowNull: false,
       },
       type: {
-        type: DataTypes.ENUM('Booking Confirmation', 'Vendor Booking Summary'),
+        type: DataTypes.ENUM('in-app', 'email'),
         allowNull: false,
       },
+      message: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      timestamp: {
+      type: DataTypes.DATE, 
+      defaultValue: DataTypes.NOW,
+      },
+    }
+  );
+
+  Notifications.associate = (models) => {
+    Notifications.belongsTo(models.Users, {
+      foreignKey: 'userId',
+      as: 'user',
+      onDelete: 'CASCADE',
     });
-  
-    Notifications.associate = (models) => {
-      Notifications.belongsTo(models.Users, {
-        foreignKey: 'userId',
-        as: 'user',
-      });
-    };
-  
-    return Notifications;
   };
-  
+
+  return Notifications;
+};

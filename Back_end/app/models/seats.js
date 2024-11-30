@@ -1,72 +1,55 @@
 module.exports = (sequelize, DataTypes) => {
-  const Seats = sequelize.define('Seats', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    status: {
-      type: DataTypes.ENUM('available', 'booked'),
-      defaultValue: 'available',
-    },
-    hallId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Halls',
-        key: 'id',
+  const Seats = sequelize.define(
+    'Seats',
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      seatNum: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+      },
+      hallId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      cinemaId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM('available', 'booked'),
+        defaultValue: 'available',
       },
     },
-    cinemaId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Cinemas',
-        key: 'id',
-      },
-    },
-  }, {
-    indexes: [
-      {
-        unique: true,
-        fields: ['cinemaId', 'hallId', 'name'], // Unique seat name within a hall
-      },
-    ],
-  });
+    {
+      indexes: [
+        {
+          unique: true,
+          fields: ['cinemaId', 'hallId', 'seatNum'], // Unique seat naming within a cinema and hall
+        },
+      ],
+    }
+  );
 
   Seats.associate = (models) => {
     Seats.belongsTo(models.Halls, {
       foreignKey: 'hallId',
       as: 'hall',
+      onDelete: 'CASCADE',
     });
     Seats.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
+      onDelete: 'CASCADE',
+    });
+    Seats.hasMany(models.BookingSeats, {
+      foreignKey: 'seatId',
+      as: 'bookingSeats',
     });
   };
-
-  Seats.beforeCreate(async (seat, options) => {
-    const hall = await sequelize.models.Halls.findByPk(seat.hallId);
-
-    if (!hall) {
-      throw new Error(`Hall with ID ${seat.hallId} does not exist.`);
-    }
-
-    const hallName = hall.name;
-    const seatCount = await sequelize.models.Seats.count({
-      where: { hallId: seat.hallId },
-    });
-
-    if (seatCount >= 47) {
-      throw new Error(`Hall ${hallName} already has the maximum of 47 seats.`);
-    }
-
-    seat.name = `${seatCount + 1}-${hallName}`;
-  });
 
   return Seats;
 };

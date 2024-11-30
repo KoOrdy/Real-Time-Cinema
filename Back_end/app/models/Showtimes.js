@@ -1,73 +1,65 @@
 module.exports = (sequelize, DataTypes) => {
-  const Showtimes = sequelize.define('Showtimes', {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    movieId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Movies',
-        key: 'id',
+  const Showtimes = sequelize.define(
+    'Showtimes',
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
       },
-      allowNull: true,
-    },
-    cinemaId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Cinemas',
-        key: 'id',
+      movieId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
-      allowNull: true,
-    },
-    hallId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Halls',
-        key: 'id',
+      hallId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
-      allowNull: true,
+      cinemaId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      vendorId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false, // Format: YYYY-MM-DD
+      },
+      startTime: {
+        type: DataTypes.TIME,
+        allowNull: false, // Format: HH:MM:SS
+      },
+      endTime: {
+        type: DataTypes.TIME,
+        allowNull: false, // Format: HH:MM:SS
+      },
     },
-    date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    startTime: {
-      type: DataTypes.TIME,
-      allowNull: false,
-    },
-    endTime: {
-      type: DataTypes.TIME,
-      allowNull: false,
-    },
-    vendorId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+    {
+      indexes: [
+        {
+          unique: true,
+          fields: ['movieId', 'cinemaId', 'hallId', 'date', 'startTime'], // Prevent overlapping time slots
+        },
+      ],
     }
-  }, {
-    indexes: [
-      {
-        unique: true,
-        fields: ['movieId', 'cinemaId', 'hallId', 'date', 'startTime'],
-      },
-    ],
-  });
+  );
 
   Showtimes.associate = (models) => {
     Showtimes.belongsTo(models.Movies, {
       foreignKey: 'movieId',
       as: 'movie',
-      onDelete: 'SET NULL',
-    });
-    Showtimes.belongsTo(models.Cinemas, {
-      foreignKey: 'cinemaId',
-      as: 'cinema',
       onDelete: 'CASCADE',
     });
     Showtimes.belongsTo(models.Halls, {
       foreignKey: 'hallId',
       as: 'hall',
+      onDelete: 'CASCADE',
+    });
+    Showtimes.belongsTo(models.Cinemas, {
+      foreignKey: 'cinemaId',
+      as: 'cinema',
       onDelete: 'CASCADE',
     });
     Showtimes.belongsTo(models.Users, {
@@ -78,7 +70,6 @@ module.exports = (sequelize, DataTypes) => {
     Showtimes.hasMany(models.Bookings, {
       foreignKey: 'showtimeId',
       as: 'bookings',
-      onDelete: 'CASCADE',
     });
   };
 

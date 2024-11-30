@@ -6,34 +6,48 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     location: {
       type: DataTypes.JSONB,
-      unique: true,
       allowNull: false,
+      unique: true,
     },
     contactInfo: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
+    },
+    vendorId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
   });
 
   Cinemas.associate = (models) => {
+    Cinemas.belongsTo(models.Users, {
+      foreignKey: 'vendorId',
+      as: 'vendor',
+      onDelete: 'CASCADE',
+    });
+    Cinemas.hasMany(models.Halls, {
+      foreignKey: 'cinemaId',
+      as: 'halls',
+    });
     Cinemas.hasMany(models.Movies, {
       foreignKey: 'cinemaId',
       as: 'movies',
     });
-
-    Cinemas.belongsTo(models.Users, {
-      foreignKey: 'vendorId',
-      as: 'vendor',
-    });
-
-    Cinemas.hasMany(models.Halls, {
+    Cinemas.hasMany(models.Seats, {
       foreignKey: 'cinemaId',
-      as: 'halls',
+      as: 'seats',
+    });
+    Cinemas.hasMany(models.Showtimes, {
+      foreignKey: 'cinemaId',
+      as: 'Showtimes',
+    });
+    Cinemas.hasMany(models.Bookings, {
+      foreignKey: 'cinemaId',
+      as: 'bookings',
     });
   };
 
