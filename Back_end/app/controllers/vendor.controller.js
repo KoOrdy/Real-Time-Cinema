@@ -393,7 +393,7 @@ exports.updateShowTime = async (req, res) => {
 
         const customers = await Users.findAll({
             where: { id: customerIds },
-            attributes: ['id', 'email']
+            attributes: ['id', 'email', 'username']
         });
 
         for (const customer of customers) {
@@ -401,7 +401,7 @@ exports.updateShowTime = async (req, res) => {
                 from: emailConfig.auth.user,
                 to: customer.email,
                 subject: 'Showtime Updated',
-                text: `Dear Customer,\n\nThe showtime you booked has been updated. Here are the new details:\n\nDate: ${date || showtime.date}\nStart Time: ${startTime || showtime.startTime}\nEnd Time: ${endTime || showtime.endTime}\n\n Thank you for your understanding.\n\nRegards❤️, `
+                text: `Dear ${customer.username},\n\nThe showtime you booked has been updated. Here are the new details:\n\nDate: ${date || showtime.date}\nStart Time: ${startTime || showtime.startTime}\nEnd Time: ${endTime || showtime.endTime}\n\n Thank you for your understanding.\n\nRegards❤️, `
             };
 
             await transporter.sendMail(mailOptions);
