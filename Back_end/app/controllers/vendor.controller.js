@@ -371,7 +371,7 @@ exports.updateShowTime = async (req, res) => {
     try {
         const showtime = await Showtimes.findByPk(id);
 
-        if (!showtime || !showtime.vendorId !== res.user.id) {
+        if (!showtime || showtime.vendorId !== req.user.id) {
             return res.status(404).send({ message: "Showtime not found!" });
         }
 
