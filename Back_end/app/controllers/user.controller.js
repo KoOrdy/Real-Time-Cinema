@@ -17,9 +17,9 @@ function RandomPass(length = 12) {
   }
 
 exports.register = async (req, res) => {
-    const { username, email, password} = req.body;
+    const { username, email, password ,phone} = req.body;
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !phone) {
         return res.status(400).send({ message: "All fields are required!" });
     }
 
@@ -29,6 +29,7 @@ exports.register = async (req, res) => {
         username: username,
         email: email,
         password: hashedPassword,
+        phone: phone,
         role: "customer"
     })
     .then((user) => {
@@ -41,7 +42,7 @@ exports.register = async (req, res) => {
 
 
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password } = req.body; 
 
     if (!username || !password) {
         return res.status(400).send({ message: 'Username and password are required!' });
