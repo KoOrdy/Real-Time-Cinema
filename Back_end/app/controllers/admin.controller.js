@@ -2,6 +2,9 @@ const db = require("../models");
 const bcrypt = require('bcrypt');
 const User = db.Users;
 const Movies = db.Movies;
+const Cinemas = db.Cinemas;
+const Bookings = db.Bookings;
+const Reports = db.Reports;
 const Op = db.Sequelize.Op;
 
 exports.addVendor = async (req,res) =>{
@@ -126,4 +129,58 @@ exports.viewAvailableMovies = async (req, res) => {
       return res.status(500).json({ message: "Error fetching movies:", data: error.message });
     }
   };
+
+  exports.reports = async (req, res) => {  
+    try{  
+        const users = await  User.findAll(); 
+        const cinemas = await  Cinemas.findAll();
+        const bookings = await  Bookings.findAll();
+        const now = new Date(); 
+        const today = now.toISOString().split("T")[0];
+        const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000); 
+
+        let countusers = 0;
+        let countcinemas = 0;
+        countbookings = bookings.length; 
+
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i]; 
+
+            if (user.role === "customer") { 
+                if (user.createdAt && new Date(user.createdAt) > last24Hours) {     
+                    countusers++;
+                }
+            }  
+        }
+
+        for (let j = 0; j < cinemas.length; j++) {
+            const cinema = cinemas[j];
+            if (cinema.createdAt && new Date(cinema.createdAt) > last24Hours) {
+                countcinemas++;
+            }
+        }
+
+        const existingReport = await Reports.findOne({ where: { reportDate: today } });
+            if (existingReport) {
+                return res.status(200).send({
+                    message: "A report for today already exists.",
+                    report: existingReport,
+                });
+            }
+
+        const newReports = await Reports.create({
+            reportDate : today,
+            newCustomers : countusers,
+            newCinemas : countcinemas,
+            totalBookings : countbookings
+        });
+
+        res.status(200).send({ 
+            message: "report generate successfully",
+            report : newReports
+        });    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
   
