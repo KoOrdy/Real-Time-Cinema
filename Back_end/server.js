@@ -7,7 +7,7 @@ const app = express();
 const customerRouter = require('./app/routes/customer.routes');
 
 var corsOptions = {
-  origin: "http://localhost:8081"
+  origin: "*"
 };
 
 db.sequelize.sync()
