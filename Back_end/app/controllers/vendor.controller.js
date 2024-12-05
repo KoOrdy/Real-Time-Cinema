@@ -412,7 +412,7 @@ exports.updateShowTime = async (req, res) => {
         
                             <!-- Body -->
                             <div style="padding: 20px;">
-                                <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.username}</strong>,</p>
+                                <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.username}😁</strong>,</p>
                                 <p style="margin: 10px 0;">The showtime you booked has been updated. Here are the new details:</p>
                                 <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #4CAF50; border-radius: 5px; margin: 10px 0;">
                                     <p style="margin: 5px 0;"><strong>Date:</strong> ${date || showtime.date}</p>
