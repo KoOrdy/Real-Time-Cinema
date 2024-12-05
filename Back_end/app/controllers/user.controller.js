@@ -127,8 +127,30 @@ exports.resetPassword = async (req, res) => {
             from: emailConfig.auth.user,
             to: email,
             subject: 'Password Reset Notification',
-            text: `Hey ${user.username} :)\n\nYour password has been reset successfully.\n\nYour new password is: ${newPassword}\n\nPlease keep it secure!🫵`
+            html: `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div style="background-color: #f7f7f7; padding: 20px; text-align: center; border-bottom: 1px solid #ddd;">
+                            <h1 style="color: #4CAF50; margin: 0;">Password Reset</h1>
+                            <p style="margin: 5px 0 0;">Notification</p>
+                        </div>
+                        <div style="padding: 20px;">
+                            <p style="font-size: 18px; margin: 0 0 10px;">Hey <strong>${user.username}</strong> 😁,</p>
+                            <p style="margin: 10px 0;">Your password has been reset successfully.</p>
+                            <div style="padding: 15px; background-color: #f9f9f9; border: 1px dashed #4CAF50; border-radius: 5px; text-align: center;">
+                                <p style="font-size: 18px; margin: 0;">Your new password is:</p>
+                                <p style="font-size: 20px; font-weight: bold; color: #4CAF50; margin: 10px 0;">${newPassword}</p>
+                            </div>
+                            <p style="margin: 20px 0 0;">Please keep it secure! 🫵</p>
+                        </div>
+                        <div style="background-color: #f7f7f7; padding: 10px; text-align: center; border-top: 1px solid #ddd;">
+                            <p style="font-size: 14px; margin: 0; color: #777;">If you have any questions, feel free to contact our support team.</p>
+                        </div>
+                    </div>
+                </div>
+            `
         };
+        
 
         await transporter.sendMail(mailOptions);
 
