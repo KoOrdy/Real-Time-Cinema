@@ -1,17 +1,17 @@
 module.exports = (app) => {
-    const adminController = require("../controllers/admin.controller");
-    const authMiddleware = require('../controllers/auth.controller');
-    var router = require("express").Router();
+  const adminController = require("../controllers/admin.controller");
+  const authMiddleware = require('../middlewares/auth.controller');
+  const authAdmin = require('../middlewares/authAdmin');
+  var router = require("express").Router();
 
 
-    router.post('/',authMiddleware,adminController.addVendor)
-    router.delete('/:id', authMiddleware, adminController.deleteUser);
-    router.get('/vendor', authMiddleware, adminController.listVendors);
-    router.get('/customer', authMiddleware, adminController.listCustomer);
-    router.get('/movies/:cinemaId' , authMiddleware, adminController.viewAvailableMovies);
-    router.get('/reports' , authMiddleware, adminController.reports);
+  router.post('/', authMiddleware, authAdmin, adminController.addVendor)
+  router.delete('/:id', authMiddleware, authAdmin, adminController.deleteUser);
+  router.get('/vendor', authMiddleware, authAdmin, adminController.listVendors);
+  router.get('/customer', authMiddleware, authAdmin, adminController.listCustomer);
+  router.get('/movies/:cinemaId', authMiddleware, authAdmin, adminController.viewAvailableMovies);
+  router.get('/reports', authMiddleware, authAdmin, adminController.reports);
 
 
-    app.use('/api/admin',router)
-  };
-  
+  app.use('/api/admin', router)
+};

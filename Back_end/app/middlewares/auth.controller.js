@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config');
-const tokenBlacklist = require('../middlewares/tokenblacklist');
+const tokenBlacklist = require('./tokenblacklist');
 
 function authMiddleware(req, res, next) {
     const header = req.header('Authorization');
@@ -17,7 +17,7 @@ function authMiddleware(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, config.secret);
-        req.user = decoded; 
+        req.user = decoded;
         next();
     } catch (error) {
         return res.status(400).send({ message: 'Invalid token.' });

@@ -8,10 +8,6 @@ const Reports = db.Reports;
 const Op = db.Sequelize.Op;
 
 exports.addVendor = async (req,res) =>{
-    if (req.user.role !== 'admin') {
-        return res.status(403).send({ message: "You are not authorized to add vendors." });
-    }
-    
     const { username, email, password } = req.body;
 
     if(!username || !email || !password){
@@ -35,11 +31,7 @@ exports.addVendor = async (req,res) =>{
     });
 }
 
-exports.deleteUser = (req, res) => {
-    if (req.user.role!== 'admin') {
-        return res.status(403).send({ message: "You are not authorized to delete." });
-    }
-    
+exports.deleteUser = (req, res) => { 
     const id = req.params.id;
     User.destroy({
         where: { id: id ,  role: {
@@ -60,10 +52,7 @@ exports.deleteUser = (req, res) => {
 }
 
 exports.listVendors = (req, res) => {
-    if (req.user.role!== 'admin') {
-        return res.status(403).send({ message: "You are not authorized to list Vendors." });
-    }
-
+    
     User.findAll({
         where: { role: 'vendor' },
         attributes: ['id', 'username', 'email']
@@ -75,10 +64,7 @@ exports.listVendors = (req, res) => {
     });
 }
 exports.listCustomer = (req, res) => {
-    if (req.user.role!== 'admin') {
-        return res.status(403).send({ message: "You are not authorized to List Customers." });
-    }
-
+  
     User.findAll({
         where: { role: 'customer' },
         attributes: ['id', 'username', 'email']
@@ -104,9 +90,7 @@ exports.viewMovies = (req, res) => {
 }
 
 exports.viewAvailableMovies = async (req, res) => {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "You are nor authorized to view movies." });
-    }
+    
     try {
       const cinemaID = req.params.cinemaId;
       const movies = await Movies.findAll({

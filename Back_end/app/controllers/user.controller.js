@@ -1,5 +1,5 @@
-const authMiddleware = require('./auth.controller');
-const config = require('../config/auth.config'); 
+const authMiddleware = require('../middlewares/auth.controller');
+const config = require('../config/auth.config');
 const db = require("../models");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -13,11 +13,11 @@ const Op = db.Sequelize.Op;
 
 
 function RandomPass(length = 12) {
-    return crypto.randomBytes(length).toString('hex').slice(0, length); 
-  }
+    return crypto.randomBytes(length).toString('hex').slice(0, length);
+}
 
 exports.register = async (req, res) => {
-    const { username, email, password ,phone} = req.body;
+    const { username, email, password, phone } = req.body;
 
     if (!username || !email || !password || !phone) {
         return res.status(400).send({ message: "All fields are required!" });
@@ -32,39 +32,39 @@ exports.register = async (req, res) => {
         phone: phone,
         role: "customer"
     })
-    .then((user) => {
-        res.status(201).send({ message: "User registered successfully!", user });
-    })
-    .catch((error) => {
-        res.status(500).send({ message: "Error: " + error.message });
-    });
+        .then((user) => {
+            res.status(201).send({ message: "User registered successfully!", user });
+        })
+        .catch((error) => {
+            res.status(500).send({ message: "Error: " + error.message });
+        });
 };
 
 
 exports.login = async (req, res) => {
-    const { username, password } = req.body; 
+    const { username, password } = req.body;
 
     if (!username || !password) {
         return res.status(400).send({ message: 'Username and password are required!' });
     }
 
-    
-        const existingUser = await User.findOne({ where: { username } });
-        if (!existingUser) {
-            return res.status(404).send({ message: 'User not found!' });
-        }
 
-        const isValidPassword = await bcrypt.compare(password, existingUser.password);
-        if (!isValidPassword) {
-            return res.status(401).send({ message: 'Invalid password!' });
-        }
+    const existingUser = await User.findOne({ where: { username } });
+    if (!existingUser) {
+        return res.status(404).send({ message: 'User not found!' });
+    }
 
-        const token = jwt.sign(
-            { id: existingUser.id, username: existingUser.username ,role: existingUser.role}, 
-            config.secret, 
-            { expiresIn: '1h' }
-        );
-         res.status(200).send({ token });
+    const isValidPassword = await bcrypt.compare(password, existingUser.password);
+    if (!isValidPassword) {
+        return res.status(401).send({ message: 'Invalid password!' });
+    }
+
+    const token = jwt.sign(
+        { id: existingUser.id, username: existingUser.username, role: existingUser.role },
+        config.secret,
+        { expiresIn: '1h' }
+    );
+    res.status(200).send({ token });
 
 };
 
@@ -81,10 +81,10 @@ exports.logout = (req, res) => {
 
 
 exports.changePassword = async (req, res) => {
-    const{oldPassword, newPassword}=req.body;
+    const { oldPassword, newPassword } = req.body;
     const user = await User.findByPk(req.user.id);
-    
-    if(!oldPassword || !newPassword){
+
+    if (!oldPassword || !newPassword) {
         return res.status(400).send({ message: 'All fields are required!' });
     }
 
@@ -98,43 +98,43 @@ exports.changePassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    
-    return res.status(200).send({message: 'password changed successfully'})    
+
+    return res.status(200).send({ message: 'password changed successfully' })
 }
 
 
 exports.resetPassword = async (req, res) => {
     try {
-      const { email } = req.body; 
-  
-      if (!email) {
-        return res.status(400).json({ message: 'Email is required' });
-      }
-  
-      const user = await User.findOne({ where: { email } });
-  
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      const newPassword = RandomPass();
-  
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-  
-      await User.update({ password: hashedPassword }, { where: { email } });
-  
-      const mailOptions = {
-        from: emailConfig.auth.user,
-        to: email,
-        subject: 'Password Reset Notification',
-        text: `Hey ${user.username} :)\n\nYour password has been reset successfully.\n\nYour new password is: ${newPassword}\n\nPlease keep it secure!🫵`
-      };
-  
-      await transporter.sendMail(mailOptions);
-  
-      res.status(200).json({ message: 'Password reset successfully and email sent' });
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const newPassword = RandomPass();
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await User.update({ password: hashedPassword }, { where: { email } });
+
+        const mailOptions = {
+            from: emailConfig.auth.user,
+            to: email,
+            subject: 'Password Reset Notification',
+            text: `Hey ${user.username} :)\n\nYour password has been reset successfully.\n\nYour new password is: ${newPassword}\n\nPlease keep it secure!🫵`
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({ message: 'Password reset successfully and email sent' });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'An error occurred', error });
+        console.error(error);
+        res.status(500).json({ message: 'An error occurred', error });
     }
-  };
+};
