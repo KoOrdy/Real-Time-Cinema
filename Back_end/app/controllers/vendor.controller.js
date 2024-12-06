@@ -11,10 +11,6 @@ const transporter = nodemailer.createTransport(emailConfig);
 exports.addCinema = async (req, res) => {
     const { name, location, contactInfo } = req.body;
 
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to add cinemas." });
-    }
-
     if (!name || !location || !contactInfo) {
         return res.status(400).send({ message: "All fields are required!" });
     }
@@ -96,18 +92,103 @@ exports.updateCinema = async (req, res) => {
 //-----------------delete cinema----------------------//
 exports.deleteCinema = async (req, res) => {
     try {
-        if (req.user.role !== 'vendor') {
-            return res.status(403).send({ message: "You are not authorized to delete cinemas." });
-        }
-
+       
         const id = req.params.id;
         const cinema = await Cinemas.findOne({
             where: { id, vendorId: req.user.id },
         });
 
         if (!cinema) {
+<<<<<<< HEAD
             return res.status(404).send({
                 message: "Cinema not found or you do not have access to delete it.",
+=======
+            return res.status(404).send({ message: "Cinema not found or you do not have access to delete it." });
+        }
+
+        await Cinemas.destroy({
+            where: { id: id },
+        });
+
+        res.send({ message: "Cinema deleted successfully!" });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+exports.viewAvailableCinemas = async (req, res) => {
+
+  try {
+    const vendorId = req.user.id; 
+    const cinemas = await Cinemas.findAll({ where: { vendorId } });
+
+    if (!cinemas || cinemas.length === 0) {
+      return res.status(404).json({ message: "No cinemas found for this vendor." });
+    }
+
+    return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching cinemas.", error: error.message });
+  }
+};
+
+//-------------------------------------------------------------------------------------------\\
+
+exports.addMovie = async (req, res) => {
+    const { title, description, genre, duration, Poster, cinemaId } = req.body;
+
+    if (!title || !genre || !duration || !cinemaId) {
+        return res.status(400).send({ message: "All required fields (title, genre, duration, cinemaId) must be provided!" });
+    }
+
+    try {
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found or you are not authorized to add movies to this cinema." });
+        }
+
+        const movie = await Movies.create({
+            title,
+            description: description || null,
+            genre,
+            duration,
+            Poster: Poster || null,
+            vendorId: req.user.id,
+            cinemaId, 
+        });
+
+        res.status(201).send({ message: "Movie added successfully!", movie });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.updateMovie = async (req, res) => {
+    const { id } = req.params;
+    const { title, description, genre, duration, Poster, cinemaId } = req.body;
+
+    try {
+        const movie = await Movies.findByPk(id);
+
+        if (!movie) {
+            return res.status(404).send({ message: "Movie not found." });
+        }
+
+        const cinema = await Cinemas.findByPk(movie.cinemaId);
+
+        if (!cinema || cinema.vendorId !== req.user.id) {
+            return res.status(403).send({ message: "You are not authorized to update this movie." });
+        }
+
+        if (cinemaId) {
+            const newCinema = await Cinemas.findOne({
+                where: { id: cinemaId, vendorId: req.user.id },
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7
             });
         }
 
@@ -122,6 +203,7 @@ exports.deleteCinema = async (req, res) => {
 //-----------------list cinemas----------------------//
 exports.listVendorCinemas = async (req, res) => {
     try {
+<<<<<<< HEAD
         if (req.user.role !== "vendor") {
             return res.status(403).json({
                 message: "You are not authorized to view cinemas.",
@@ -129,6 +211,10 @@ exports.listVendorCinemas = async (req, res) => {
         }
 
         const vendorId = req.user.id;
+=======
+      
+        const id = req.params.id;
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7
 
         const cinemas = await Cinemas.findAll({
             where: { vendorId },
@@ -156,9 +242,55 @@ exports.listVendorCinemas = async (req, res) => {
 
 //-----------------------------------Hall Management--------------------------------------------------------\\
 
+<<<<<<< HEAD
 //-----------------add hall----------------------//
 
 exports.addHall = async (req, res) => {
+=======
+exports.viewAvailableMovies = async (req, res) => {
+    
+    try {
+        const cinemaID = req.params.cinemaId;
+
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaID, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found or you are not authorized to view its movies." });
+        }
+
+        const movies = await Movies.findAll({
+            where: { cinemaId: cinemaID }, 
+            attributes: ['id', 'title', 'genre', 'duration', 'description', 'Poster'], 
+        });
+
+        if (!movies || !movies.length) {
+            return res.status(404).json({ message: "No movies found for this cinema." });
+        }
+
+        return res.status(200).json({ message: "Movies fetched successfully!", data: movies });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error fetching movies", data: error.message });
+    }
+};
+
+//-------------------------------------------------------------------------------------------\\
+
+exports.addHall = async (req, res) => {
+    const { name, cinemaId } = req.body;
+
+    if (!name || !cinemaId) {
+        return res.status(400).send({ message: "Both 'name' and 'cinemaId' are required!" });
+    }
+
+    const hallNameRegex = /^[A-Z]$/;
+    if (!hallNameRegex.test(name)) {
+        return res.status(400).send({ message: "Hall name must be a single uppercase letter (A-Z)." });
+    }
+
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7
     try {
         const { name, cinemaId } = req.body;
 
@@ -205,20 +337,153 @@ exports.addHall = async (req, res) => {
             cinemaId,
         });
 
+<<<<<<< HEAD
         const seats = [];
         for (let row = 1; row <= 47; row++) {
             seats.push({
                 seatNum: `${row}${name}`, // Dynamic seat numbering (e.g., "1A", "2A")
                 hallId: hall.id,
                 cinemaId: cinemaId,
+=======
+        res.status(201).send({ message: "Hall added successfully!", hall });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.getHallsByCinema = async (req, res) => {
+    const { cinemaId } = req.params;
+
+    if (!cinemaId) {
+        return res.status(400).send({ message: "Cinema ID is required!" });
+    }
+
+    try {
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
+
+        if (!cinema) {
+            return res.status(404).send({ message: "Cinema not found or you are not authorized to view halls for this cinema." });
+        }
+
+        const halls = await Halls.findAll({
+            where: { cinemaId },
+            attributes: ['id', 'name'],
+        });
+
+        res.status(200).send({ message: "Halls retrieved successfully!", halls });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+//-------------------------------------------------------------------------------------------\\
+
+exports.addShowtime = async (req, res) => {
+    const { date, startTime, endTime } = req.body;
+
+    if (!date || !startTime || !endTime) {
+        return res.status(400).send({ message: "All required fields (date, startTime, endTime) must be provided!" });
+    }
+
+    try {
+        const showtime = await Showtimes.create({
+            date,
+            startTime,
+            endTime,
+            vendorId: req.user.id,
+        });
+
+        res.status(201).send({ message: "Showtime added successfully!", showtime });
+    } catch (error) {
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+};
+
+
+exports.updateShowTime = async (req, res) => {
+    const { date, startTime, endTime } = req.body;
+    const { id } = req.params;
+
+    try {
+        const showtime = await Showtimes.findByPk(id);
+
+        if (!showtime || showtime.vendorId !== req.user.id) {
+            return res.status(404).send({ message: "Showtime not found!" });
+        }
+
+        if (date) showtime.date = date;
+        if (startTime) showtime.startTime = startTime;
+        if (endTime) showtime.endTime = endTime;
+        await showtime.save();
+
+        const bookings = await Bookings.findAll({ where: { showtimeId: id } });
+
+        if (bookings.length === 0) {
+            return res.status(200).send({ 
+                message: "Showtime updated successfully, but no customers booked this showtime.", 
+                showtime 
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7
             });
         }
 
         await Seats.bulkCreate(seats);
 
+<<<<<<< HEAD
         res.status(201).send({
             message: "Hall and seats added successfully!",
             hall,
+=======
+        const customers = await Users.findAll({
+            where: { id: customerIds },
+            attributes: ['id', 'email', 'username']
+        });
+
+        for (const customer of customers) {
+            const mailOptions = {
+                from: emailConfig.auth.user,
+                to: customer.email,
+                subject: 'Showtime Updated',
+                html: `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                        <div style="max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <!-- Header -->
+                            <div style="background-color: #4CAF50; padding: 20px; text-align: center; color: white;">
+                                <h1 style="margin: 0; font-size: 24px;">🎥 Showtime Updated!</h1>
+                                <p style="margin: 0; font-size: 14px;">Important Notification</p>
+                            </div>
+        
+                            <!-- Body -->
+                            <div style="padding: 20px;">
+                                <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.username}😁</strong>,</p>
+                                <p style="margin: 10px 0;">The showtime you booked has been updated. Here are the new details:</p>
+                                <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #4CAF50; border-radius: 5px; margin: 10px 0;">
+                                    <p style="margin: 5px 0;"><strong>Date:</strong> ${date || showtime.date}</p>
+                                    <p style="margin: 5px 0;"><strong>Start Time:</strong> ${startTime || showtime.startTime}</p>
+                                    <p style="margin: 5px 0;"><strong>End Time:</strong> ${endTime || showtime.endTime}</p>
+                                </div>
+                                <p style="margin: 20px 0 0;">Thank you for your understanding. We look forward to welcoming you soon!</p>
+                            </div>
+        
+                            <!-- Footer -->
+                            <div style="background-color: #f7f7f7; padding: 10px; text-align: center; border-top: 1px solid #ddd;">
+                                <p style="font-size: 14px; margin: 0; color: #555;">❤️ Regards, <br> Your Cinema Team</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            };
+        
+            await transporter.sendMail(mailOptions);
+        }
+        
+
+        res.status(200).send({ 
+            message: "Showtime updated successfully, and emails sent to customers.", 
+            showtime 
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7
         });
     } catch (error) {
         console.error("Error adding hall:", error);
@@ -229,6 +494,7 @@ exports.addHall = async (req, res) => {
     }
 };
 
+<<<<<<< HEAD
 //-----------------hall details----------------------//
 
 // exports.getHallDetails = async (req, res) => {
@@ -587,6 +853,10 @@ exports.addHall = async (req, res) => {
 //     if (req.user.role!== 'vendor') {
 //         return res.status(403).send({ message: "You are not authorized to delete showtimes." });
 //     }
+=======
+exports.deleteShowtime = async (req, res) => {
+    const { id } = req.params;
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7
 
 //     try{
 //         const showtime = await Showtimes.findByPk(id);
@@ -604,7 +874,23 @@ exports.addHall = async (req, res) => {
 //         res.status(500).send({ message: "Error: " + error.message });
 //     }
 
+<<<<<<< HEAD
 // }
 
 // //-----------------------------------seat map--------------------------------------------------------\\
 // //-----------------------------------Notification Management--------------------------------------------------------\\
+=======
+}
+
+//-------------------------------------------------------------------------------------------\\
+
+exports.viewBookedSeats = async (req, res) => {
+    try{
+
+        //msh fahem hivew anhy booked seat????
+
+    }catch(error){
+        res.status(500).send({ message: "Error: " + error.message });
+    }
+}
+>>>>>>> cc4745917686343bb0fcc4d9780a17cb6c561dc7

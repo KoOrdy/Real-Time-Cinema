@@ -1,20 +1,19 @@
 module.exports = (app) => {
-    const UserController = require("../controllers/user.controller");
-    const authMiddleware = require('../controllers/auth.controller');
-    var router = require("express").Router();
+  const UserController = require("../controllers/user.controller");
+  const authMiddleware = require('../middlewares/auth.controller');
+  var router = require("express").Router();
 
 
-    router.post("/register", UserController.register);
-  
-    router.post("/login", UserController.login);
+  router.post("/register", UserController.register);
 
-    router.post('/logout', authMiddleware, UserController.logout);
+  router.post("/login", UserController.login);
 
-    router.post('/changePassword', authMiddleware, UserController.changePassword);
+  router.post('/logout', authMiddleware, UserController.logout);
 
-    router.post('/resetpassword',UserController.resetPassword);
+  router.post('/changePassword', authMiddleware, UserController.changePassword);
 
-    app.use('/api',router)
+  router.post('/resetpassword', UserController.resetPassword);
 
-  };
-  
+  app.use('/api', router)
+
+};
