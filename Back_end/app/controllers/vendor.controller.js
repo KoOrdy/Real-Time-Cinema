@@ -514,15 +514,11 @@ exports.addHall = async (req, res) => {
 //     }
 // };
 
-// //-----------------update showtime----------------------//
+//-----------------update showtime----------------------//
 
 // exports.updateShowTime = async (req, res) => {
 //     const { date, startTime, endTime } = req.body;
 //     const { id } = req.params;
-
-//     if (req.user.role !== 'vendor') {
-//         return res.status(403).send({ message: "You are not authorized to update showtimes." });
-//     }
 
 //     try {
 //         const showtime = await Showtimes.findByPk(id);
@@ -557,11 +553,39 @@ exports.addHall = async (req, res) => {
 //                 from: emailConfig.auth.user,
 //                 to: customer.email,
 //                 subject: 'Showtime Updated',
-//                 text: `Dear ${customer.username},\n\nThe showtime you booked has been updated. Here are the new details:\n\nDate: ${date || showtime.date}\nStart Time: ${startTime || showtime.startTime}\nEnd Time: ${endTime || showtime.endTime}\n\n Thank you for your understanding.\n\nRegards❤️, `
+//                 html: `
+//                     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+//                         <div style="max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+//                             <!-- Header -->
+//                             <div style="background-color: #4CAF50; padding: 20px; text-align: center; color: white;">
+//                                 <h1 style="margin: 0; font-size: 24px;">🎥 Showtime Updated!</h1>
+//                                 <p style="margin: 0; font-size: 14px;">Important Notification</p>
+//                             </div>
+        
+//                             <!-- Body -->
+//                             <div style="padding: 20px;">
+//                                 <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.username}😁</strong>,</p>
+//                                 <p style="margin: 10px 0;">The showtime you booked has been updated. Here are the new details:</p>
+//                                 <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #4CAF50; border-radius: 5px; margin: 10px 0;">
+//                                     <p style="margin: 5px 0;"><strong>Date:</strong> ${date || showtime.date}</p>
+//                                     <p style="margin: 5px 0;"><strong>Start Time:</strong> ${startTime || showtime.startTime}</p>
+//                                     <p style="margin: 5px 0;"><strong>End Time:</strong> ${endTime || showtime.endTime}</p>
+//                                 </div>
+//                                 <p style="margin: 20px 0 0;">Thank you for your understanding. We look forward to welcoming you soon!</p>
+//                             </div>
+        
+//                             <!-- Footer -->
+//                             <div style="background-color: #f7f7f7; padding: 10px; text-align: center; border-top: 1px solid #ddd;">
+//                                 <p style="font-size: 14px; margin: 0; color: #555;">❤ Regards, <br> Your Cinema Team</p>
+//                             </div>
+//                         </div>
+//                     </div>
+//                 `
 //             };
-
+        
 //             await transporter.sendMail(mailOptions);
 //         }
+        
 
 //         res.status(200).send({ 
 //             message: "Showtime updated successfully, and emails sent to customers.", 
