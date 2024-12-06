@@ -38,6 +38,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT, // URL for the poster image
         allowNull: false,
       },
+      price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0.0,
+      },
       vendorId: {
         type: DataTypes.INTEGER,
         allowNull: false,
