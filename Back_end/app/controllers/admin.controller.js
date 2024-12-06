@@ -1,5 +1,6 @@
 const db = require("../models");
 const bcrypt = require('bcrypt');
+const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const User = db.Users;
 const Movies = db.Movies;
 const Cinemas = db.Cinemas;
@@ -7,29 +8,30 @@ const Bookings = db.Bookings;
 const Reports = db.Reports;
 const Op = db.Sequelize.Op;
 
-exports.addVendor = async (req,res) =>{
+exports.addVendor = async (req, res) => {
     const { username, email, password } = req.body;
-
-    if(!username || !email || !password){
-        return res.status(400).send({message: "All fields are required!"});
+  
+    if (!username || !email || !password) {
+      return res.status(400).send({ message: "All fields are required!" });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    User.create({
+  
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const vendor = await User.create({
         username: username,
         email: email,
         password: hashedPassword,
-        role: "vendor"
-    })
-
-    .then((Vendor) => {
-        res.status(201).send({ message: "Vendor Created successfully!", Vendor });
-    })
-    .catch((error) => {
-        res.status(500).send({ message: "Error: " + error.message });
-    });
-}
+        role: "vendor",
+      });
+  
+      await redisClient.del("vendors");
+  
+      res.status(201).send({ message: "Vendor Created successfully!", vendor });
+    } catch (error) {
+      res.status(500).send({ message: "Error: " + error.message });
+    }
+  };
 
 exports.deleteUser = (req, res) => { 
     const id = req.params.id;
@@ -51,17 +53,25 @@ exports.deleteUser = (req, res) => {
     });
 }
 
-exports.listVendors = (req, res) => {
+exports.listVendors = async (req, res) => {
+    try {
+        const cachedVendors = await getAsync("vendors");
+
+        if (cachedVendors) {
+          return res.send(JSON.parse(cachedVendors)); 
+        }
     
-    User.findAll({
-        where: { role: 'vendor' },
-        attributes: ['id', 'username', 'email']
-    })
-   .then((vendors) => {
-    res.send(vendors);
-    }).catch((error) => {
+        const vendors = await User.findAll({
+          where: { role: "vendor" },
+          attributes: ["id", "username", "email"],
+        });
+    
+        await setexAsync("vendors", 300, JSON.stringify(vendors));
+    
+        return res.send(vendors); 
+      } catch (error) {
         res.status(500).send({ message: "Error: " + error.message });
-    });
+      }
 }
 exports.listCustomer = (req, res) => {
   
@@ -76,18 +86,6 @@ exports.listCustomer = (req, res) => {
     });
 }
 
-exports.viewMovies = (req, res) => {
-
-    Movies.findAll({
-        attributes: ['id', 'title', 'description', 'releaseDate', 'duration', 'Poster']
-    })
-   .then((movies) => {
-    return res.send(movies);
-   }).catch((error) => {
-    res.status(500).send({message: "Error: " + error.message})
-   });
-
-}
 
 exports.viewAvailableMovies = async (req, res) => {
     
