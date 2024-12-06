@@ -8,10 +8,6 @@ const transporter = nodemailer.createTransport(emailConfig);
 exports.addCinema = async (req, res) => { 
     const { name, location, contactInfo } = req.body;
 
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to add cinemas." });
-    }
-
     if (!name || !location || !contactInfo) {
         return res.status(400).send({ message: "All fields are required!" });
     }
@@ -64,10 +60,7 @@ exports.updateCinema = async (req, res) => {
 
 exports.deleteCinema = async (req, res) => {
     try {
-        if (req.user.role !== 'vendor') {
-            return res.status(403).send({ message: "You are not authorized to delete cinemas." });
-        }
-
+       
         const id = req.params.id;
 
         const cinema = await Cinemas.findOne({
@@ -89,9 +82,6 @@ exports.deleteCinema = async (req, res) => {
 };
 
 exports.viewAvailableCinemas = async (req, res) => {
-  if (req.user.role !== "vendor") {
-    return res.status(403).json({ message: "You are not authorized to view cinemas." });
-  }
 
   try {
     const vendorId = req.user.id; 
@@ -112,10 +102,6 @@ exports.viewAvailableCinemas = async (req, res) => {
 
 exports.addMovie = async (req, res) => {
     const { title, description, genre, duration, Poster, cinemaId } = req.body;
-
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to add movies." });
-    }
 
     if (!title || !genre || !duration || !cinemaId) {
         return res.status(400).send({ message: "All required fields (title, genre, duration, cinemaId) must be provided!" });
@@ -150,10 +136,6 @@ exports.addMovie = async (req, res) => {
 exports.updateMovie = async (req, res) => {
     const { id } = req.params;
     const { title, description, genre, duration, Poster, cinemaId } = req.body;
-
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to update movies." });
-    }
 
     try {
         const movie = await Movies.findByPk(id);
@@ -200,10 +182,7 @@ exports.updateMovie = async (req, res) => {
 
 exports.deleteMovie = async (req, res) => {
     try {
-        if (req.user.role !== 'vendor') {
-            return res.status(403).send({ message: "You are not authorized to delete movies." });
-        }
-
+      
         const id = req.params.id;
 
         const movie = await Movies.findByPk(id, {
@@ -231,10 +210,7 @@ exports.deleteMovie = async (req, res) => {
 
 
 exports.viewAvailableMovies = async (req, res) => {
-    if (req.user.role !== "vendor") {
-        return res.status(403).json({ message: "You are not authorized to view movies." });
-    }
-
+    
     try {
         const cinemaID = req.params.cinemaId;
 
@@ -266,10 +242,6 @@ exports.viewAvailableMovies = async (req, res) => {
 
 exports.addHall = async (req, res) => {
     const { name, cinemaId } = req.body;
-
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to add halls." });
-    }
 
     if (!name || !cinemaId) {
         return res.status(400).send({ message: "Both 'name' and 'cinemaId' are required!" });
@@ -304,10 +276,6 @@ exports.addHall = async (req, res) => {
 exports.getHallsByCinema = async (req, res) => {
     const { cinemaId } = req.params;
 
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to view halls." });
-    }
-
     if (!cinemaId) {
         return res.status(400).send({ message: "Cinema ID is required!" });
     }
@@ -337,10 +305,6 @@ exports.getHallsByCinema = async (req, res) => {
 exports.addShowtime = async (req, res) => {
     const { date, startTime, endTime } = req.body;
 
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to add showtimes." });
-    }
-
     if (!date || !startTime || !endTime) {
         return res.status(400).send({ message: "All required fields (date, startTime, endTime) must be provided!" });
     }
@@ -363,10 +327,6 @@ exports.addShowtime = async (req, res) => {
 exports.updateShowTime = async (req, res) => {
     const { date, startTime, endTime } = req.body;
     const { id } = req.params;
-
-    if (req.user.role !== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to update showtimes." });
-    }
 
     try {
         const showtime = await Showtimes.findByPk(id);
@@ -446,10 +406,6 @@ exports.updateShowTime = async (req, res) => {
 
 exports.deleteShowtime = async (req, res) => {
     const { id } = req.params;
-    
-    if (req.user.role!== 'vendor') {
-        return res.status(403).send({ message: "You are not authorized to delete showtimes." });
-    }
 
     try{
         const showtime = await Showtimes.findByPk(id);
@@ -467,4 +423,16 @@ exports.deleteShowtime = async (req, res) => {
         res.status(500).send({ message: "Error: " + error.message });
     }
 
+}
+
+//-------------------------------------------------------------------------------------------\\
+
+exports.viewBookedSeats = async (req, res) => {
+    try{
+
+        //msh fahem hivew anhy booked seat????
+
+    }catch(error){
+        res.status(500).send({ message: "Error: " + error.message });
+    }
 }
