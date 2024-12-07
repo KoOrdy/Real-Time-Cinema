@@ -222,236 +222,165 @@ exports.addHall = async (req, res) => {
     }
 };
 
-//-----------------hall details----------------------//
-
-// exports.getHallDetails = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-
-//         if (!id) {
-//             return res.status(400).json({ message: "Hall ID is required!" });
-//         }
-
-//         const hall = await Halls.findOne({
-//             where: { id: id },
-//             include: [
-//                 {
-//                     model: Cinemas,
-//                     as: 'cinema',
-//                     attributes: ['name'], 
-//                 },
-//             ],
-//         });
-
-//         if (!hall) {
-//             return res.status(404).json({ message: "Hall not found." });
-//         }
-
-//         const showtimes = await Showtimes.findAll({
-//             where: { hallId: id },
-//             attributes: ['date', 'movieId', 'startTime', 'endTime'],
-//             include: [
-//                 {
-//                     model: Movies,
-//                     as: 'movie',
-//                     attributes: ['title', 'genre'],
-//                 },
-//             ],
-//         });
-
-//         const moviesByDate = showtimes.reduce((acc, showtime) => {
-//             const existing = acc.find(entry => entry.date === showtime.date);
-//             if (!existing) {
-//                 acc.push({
-//                     date: showtime.date,
-//                     startTime: showtime.startTime,
-//                     endTime: showtime.endTime,
-//                     movie: {
-//                         id: showtime.movieId,
-//                         title: showtime.movie?.title || 'Unknown Title',
-//                         genre: showtime.movie?.genre || 'Unknown Genre',
-//                     },
-//                 });
-//             }
-//             return acc;
-//         }, []);
-
-//         const hallDetails = {
-//             name: hall.name,
-//             capacity: hall.capacity,
-//             cinema: hall.cinema,
-//             movies: moviesByDate,
-//         };
-
-//         res.status(200).json({
-//             message: "Hall details fetched successfully.",
-//             data: hallDetails,
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: "Error fetching hall details.", error: error.message });
-//     }
-// };
 
 //-----------------list halls ----------------------//
 
-// exports.getHallsByCinema = async (req, res) => {
-//     const { cinemaId } = req.params;
+exports.listCinemaHalls = async (req, res) => {
+    try {
+        const { cinemaId } = req.params;
 
-//     if (req.user.role !== 'vendor') {
-//         return res.status(403).send({ message: "You are not authorized to view halls." });
-//     }
+        if (!cinemaId) {
+            return res.status(400).json({ message: "Cinema ID is required!" });
+        }
 
-//     if (!cinemaId) {
-//         return res.status(400).send({ message: "Cinema ID is required!" });
-//     }
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
 
-//     try {
-//         const cinema = await Cinemas.findOne({
-//             where: { id: cinemaId, vendorId: req.user.id },
-//         });
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found or you are not authorized to view halls for this cinema." });
+        }
 
-//         if (!cinema) {
-//             return res.status(404).send({ message: "Cinema not found or you are not authorized to view halls for this cinema." });
-//         }
+        const halls = await Halls.findAll({
+            where: { cinemaId },
+            attributes: ['name', 'capacity'], 
+        });
 
-//         const halls = await Halls.findAll({
-//             where: { cinemaId },
-//             attributes: ['id', 'name'],
-//         });
+        if (halls.length === 0) {
+            return res.status(404).json({ message: "No halls found for this cinema." });
+        }
 
-//         res.status(200).send({ message: "Halls retrieved successfully!", halls });
-//     } catch (error) {
-//         res.status(500).send({ message: "Error: " + error.message });
-//     }
-// };
+        res.status(200).json({ 
+            message: "Halls retrieved successfully!",
+            data: halls 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error retrieving halls.", error: error.message });
+    }
+};
 
 //-----------------------------------movie Management--------------------------------------------------------\\
 
-// //-----------------add movie----------------------//
+//-----------------add movie----------------------//
 
-// exports.addMovie = async (req, res) => {
-//     const { title, description, genre, duration, Poster, cinemaId } = req.body;
+exports.addMovie = async (req, res) => {
+    try {
+        const { title, description, genre, duration, price, poster, cinemaId } = req.body;
 
-//     if (req.user.role !== 'vendor') {
-//         return res.status(403).send({ message: "You are not authorized to add movies." });
-//     }
 
-//     if (!title || !genre || !duration || !cinemaId) {
-//         return res.status(400).send({ message: "All required fields (title, genre, duration, cinemaId) must be provided!" });
-//     }
+        if (!title || !genre || !duration || !price || !cinemaId) {
+            return res.status(400).json({ message: "All required fields (title, genre, duration, price, cinemaId) must be provided!" });
+        }
 
-//     try {
-//         const cinema = await Cinemas.findOne({
-//             where: { id: cinemaId, vendorId: req.user.id },
-//         });
+        const validGenres = [ 'comedy', 'drama', 'romance', 'action', 'animation', 'horror', 'sci-fi', 'fantasy', 'mystery', 'documentary'];
+        if (!validGenres.includes(genre)) {
+            return res.status(400).json({ message: `Invalid genre. Allowed genres are: ${validGenres.join(', ')}.` });
+        }
 
-//         if (!cinema) {
-//             return res.status(404).send({ message: "Cinema not found or you are not authorized to add movies to this cinema." });
-//         }
+        const cinema = await Cinemas.findOne({
+            where: { id: cinemaId, vendorId: req.user.id },
+        });
 
-//         const movie = await Movies.create({
-//             title,
-//             description: description || null,
-//             genre,
-//             duration,
-//             Poster: Poster || null,
-//             vendorId: req.user.id,
-//             cinemaId, 
-//         });
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found or you are not authorized to add movies to this cinema." });
+        }
 
-//         res.status(201).send({ message: "Movie added successfully!", movie });
-//     } catch (error) {
-//         res.status(500).send({ message: "Error: " + error.message });
-//     }
-// };
+        const movie = await Movies.create({
+            title,
+            description: description || null,
+            genre,
+            duration,
+            price: price,
+            poster: poster || null,
+            vendorId: req.user.id,
+            cinemaId,
+        });
 
-// //-----------------update movie----------------------//
+        res.status(201).json({ 
+            message: "Movie added successfully!",
+            data: movie,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error adding movie.", error: error.message });
+    }
+};
 
-// exports.updateMovie = async (req, res) => {
-//     const { id } = req.params;
-//     const { title, description, genre, duration, Poster, cinemaId } = req.body;
+//-----------------update movie----------------------//
 
-//     if (req.user.role !== 'vendor') {
-//         return res.status(403).send({ message: "You are not authorized to update movies." });
-//     }
+exports.updateMovie = async (req, res) => {
+    try {
+        const { movieId } = req.params;
+        const { title, description, genre, duration, price, poster } = req.body;
 
-//     try {
-//         const movie = await Movies.findByPk(id);
+        const movie = await Movies.findByPk(movieId);
+        if (!movie) {
+            return res.status(404).json({ message: "Movie not found." });
+        }
 
-//         if (!movie) {
-//             return res.status(404).send({ message: "Movie not found." });
-//         }
+        const cinema = await Cinemas.findByPk(movie.cinemaId);
+        if (!cinema || cinema.vendorId !== req.user.id) {
+            return res.status(403).json({ message: "You are not authorized to update this movie." });
+        }
 
-//         const cinema = await Cinemas.findByPk(movie.cinemaId);
+        if (genre) {
+            const validGenres = ['comedy', 'drama', 'romance', 'action', 'animation', 'horror', 'sci-fi', 'fantasy', 'mystery', 'documentary'];
+            if (!validGenres.includes(genre)) {
+                return res.status(400).json({ message: `Invalid genre. Allowed genres are: ${validGenres.join(', ')}.` });
+            }
+        }
 
-//         if (!cinema || cinema.vendorId !== req.user.id) {
-//             return res.status(403).send({ message: "You are not authorized to update this movie." });
-//         }
+        const updatedFields = {};
+        if (title) updatedFields.title = title;
+        if (description !== undefined) updatedFields.description = description || null;
+        if (genre) updatedFields.genre = genre;
+        if (duration) updatedFields.duration = duration;
+        if (price) updatedFields.price = price;
+        if (poster !== undefined) updatedFields.poster = poster || null;
 
-//         if (cinemaId) {
-//             const newCinema = await Cinemas.findOne({
-//                 where: { id: cinemaId, vendorId: req.user.id },
-//             });
+        await movie.update(updatedFields);
 
-//             if (!newCinema) {
-//                 return res.status(404).send({
-//                     message: "New cinema not found or you are not authorized to update movies in this cinema.",
-//                 });
-//             }
-//         }
+        res.status(200).json({
+            message: "Movie updated successfully!",
+            data: movie,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error updating movie.", error: error.message });
+    }
+};
 
-//         const updatedData = {};
-//         if (title) updatedData.title = title;
-//         if (description) updatedData.description = description || null;
-//         if (genre) updatedData.genre = genre;
-//         if (duration) updatedData.duration = duration;
-//         if (Poster) updatedData.Poster = Poster || null;
-//         if (cinemaId) updatedData.cinemaId = cinemaId;
+//-----------------delete movie----------------------//
 
-//         await movie.update(updatedData);
+exports.deleteMovie = async (req, res) => {
+    try {
+        const { movieId } = req.params;
 
-//         res.status(200).send({ message: "Movie updated successfully!", movie });
+        const movie = await Movies.findOne({
+            where: { id: movieId },
+            include: {
+                model: Cinemas,
+                as: 'cinema',
+                where: { vendorId: req.user.id },
+                attributes: ['id'],
+            },
+        });
 
-//     } catch (error) {
-//         res.status(500).send({ message: "Error: " + error.message });
-//     }
-// };
+        if (!movie) {
+            return res.status(404).json({ message: "Movie not found or you are not authorized to delete it." });
+        }
 
-// //-----------------delete movie----------------------//
+        await Movies.destroy({ where: { id: movieId } });
 
-// exports.deleteMovie = async (req, res) => {
-//     try {
-//         if (req.user.role !== 'vendor') {
-//             return res.status(403).send({ message: "You are not authorized to delete movies." });
-//         }
+        res.status(200).json({ message: "Movie and all related data deleted successfully!" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error deleting movie.", error: error.message });
+    }
+};
 
-//         const id = req.params.id;
-
-//         const movie = await Movies.findByPk(id, {
-//             include: {
-//                 model: Cinemas,
-//                 as: 'cinema',
-//                 where: { vendorId: req.user.id },
-//                 attributes: ['id'], 
-//             },
-//         });
-
-//         if (!movie) {
-//             return res.status(404).send({ message: "Movie not found or you are not authorized to delete it." });
-//         }
-
-//         await Movies.destroy({
-//             where: { id: id },
-//         });
-
-//         res.send({ message: "Movie deleted successfully!" });
-//     } catch (error) {
-//         res.status(500).send({ message: "Error: " + error.message });
-//     }
-// };
-
-// //-----------------list movies----------------------//
+//-----------------list movies----------------------//
 
 // exports.viewAvailableMovies = async (req, res) => {
 //     if (req.user.role !== "vendor") {

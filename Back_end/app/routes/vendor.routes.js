@@ -11,12 +11,11 @@ module.exports = (app) => {
   router.get('/cinemas/', authMiddleware, authVendor, vendorController.listVendorCinemas);
 
   router.post('/halls/add', authMiddleware, authVendor, vendorController.addHall);
-  // router.get('/halls/details/:id', authMiddleware, authVendor, vendorController.getHallDetails);
-  // router.get('/halls/:cinemaId', authMiddleware, authVendor, vendorController.getHallsByCinema);
+  router.get('/halls/:cinemaId', authMiddleware, authVendor, vendorController.listCinemaHalls);
 
-  // router.post('/movies/add', authMiddleware, authVendor, vendorController.addMovie);
-  // router.put('/movies/update/:id', authMiddleware, authVendor, vendorController.updateMovie);
-  // router.delete('/movies/delete/:id', authMiddleware, authVendor, vendorController.deleteMovie);
+  router.post('/movies/add', authMiddleware, authVendor, vendorController.addMovie);
+  router.put('/movies/update/:movieId', authMiddleware, authVendor, vendorController.updateMovie);
+  router.delete('/movies/delete/:movieId', authMiddleware, authVendor, vendorController.deleteMovie);
   // router.get('/movies/:cinemaId', authMiddleware, authVendor, vendorController.viewAvailableMovies);
 
   // router.post('/showtimes/add', authMiddleware, authVendor, vendorController.addShowtime);
