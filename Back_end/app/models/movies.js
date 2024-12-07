@@ -53,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       hallId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
     });
 
