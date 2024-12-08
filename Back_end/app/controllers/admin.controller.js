@@ -33,7 +33,7 @@ exports.addVendor = async (req, res) => {
     }
   };
 
-exports.deleteUser = (req, res) => { 
+exports.deleteUser = async (req, res) => { 
     const id = req.params.id;
     User.destroy({
         where: { id: id ,  role: {
@@ -47,6 +47,9 @@ exports.deleteUser = (req, res) => {
         } else {
             res.send({ message: `${num} user deleted successfully!` });
         }
+         
+       redisClient.del("vendors");
+
     })
     .catch((error) => {
         res.status(500).send({ message: "Error: " + error.message });
