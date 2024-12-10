@@ -51,10 +51,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      hallId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
     });
 
   Movies.associate = (models) => {
@@ -66,11 +62,6 @@ module.exports = (sequelize, DataTypes) => {
     Movies.belongsTo(models.Cinemas, {
       foreignKey: 'cinemaId',
       as: 'cinema',
-      onDelete: 'CASCADE',
-    });
-    Movies.belongsTo(models.Halls, {
-      foreignKey: 'hallId',
-      as: 'hall',
       onDelete: 'CASCADE',
     });
     Movies.hasMany(models.Showtimes, {

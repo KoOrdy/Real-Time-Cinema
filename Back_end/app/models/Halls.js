@@ -40,10 +40,6 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'hallId',
       as: 'seats',
     });
-    Halls.hasMany(models.Movies, {
-      foreignKey: 'hallId',
-      as: 'movies',
-    });
     Halls.hasMany(models.Showtimes, {
       foreignKey: 'hallId',
       as: 'Showtimes',
