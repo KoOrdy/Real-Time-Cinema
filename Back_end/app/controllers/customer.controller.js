@@ -3,19 +3,26 @@ const db = require("../models");
 const op = db.Sequelize.Op;
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config'); 
+const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
+const { Json } = require("sequelize/lib/utils");
 
 
 exports.viewAvailableCinemas = async (req, res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to view cinemas." });
-  }
   try {
+
+    const cachedCinemas = await getAsync("cinemas");
+    if(cachedCinemas){
+      return res.status(200).json({ message: "Cinemas fetched successfully.", data: JSON.parse(cachedCinemas)});
+    }
+
     const cinemas = await Cinemas.findAll();
 
     if (!cinemas.length) {
       return res.status(404).json({ message: "No cinemas found." });
     }
+    await setexAsync("cinemas", 300, JSON.stringify(cinemas));
     return res.status(200).json({ message: "Cinemas fetched successfully.", data: cinemas });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Error fetching cinemas.", data: error.message });
@@ -23,26 +30,29 @@ exports.viewAvailableCinemas = async (req, res) => {
 };
 
 exports.viewLastAddedMovies = async (req, res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to view movies." });
-  }
   try {
     const cinemaID = req.params.cinemaId;
     if (!cinemaID || isNaN(cinemaID)) {
       return res.status(400).json({ message: "Invalid cinema ID." });
     }
+
+    const cachedLastMovies = await getAsync(`lastMovies for ${cinemaID}`);
+    if(cachedLastMovies){
+      return res.status(200).json({ message: "Movies fetched successfully", data: JSON.parse(cachedLastMovies) });
+    }
+
     const movies = await Movies.findAll({
       where : { cinemaId : cinemaID },
-      attributes: ["id", "Poster", "title", "description", "createdAt"],
       order: [["createdAt", "DESC"]],
       limit: 5,
-    });
-
+    });   
     if (!movies.length) {
       return res.status(404).json({ message: "No movies found for this cinema." });
     }
-
+    
+    await setexAsync(`lastMovies for ${cinemaID}`, 300, JSON.stringify(movies));
     return res.status(200).json({ message: "Movies fetched successfully", data: movies });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Error fetching movies.", data: error.message });
@@ -50,18 +60,21 @@ exports.viewLastAddedMovies = async (req, res) => {
 };
 
 exports.viewAvailableMovies = async (req, res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are nor authorized to view movies." });
-  }
   try {
     const cinemaID = req.params.cinemaId;
     if (!cinemaID || isNaN(cinemaID)) {
       return res.status(400).json({ message: "Invalid cinema ID." });
     }
+    const cachedMovies = await getAsync(`movies for ${cinemaID}`);
+    if(cachedMovies){
+      return res.status(200).json({ message: "Movies fetched successfully", data: JSON.parse(cachedMovies) });
+    }
+
     const movies = await Movies.findAll({ where: { cinemaId : cinemaID } });
     if (!movies.length) {
       return res.status(404).json({ message: "No movies found for this cinema." });
     }
+    await setexAsync(`movies for ${cinemaID}`, 300, JSON.stringify(movies));
     return res.status(200).json({ message: "Movies fetched successfully.", data: movies });
   } catch (error) {
     console.error(error);
@@ -69,101 +82,102 @@ exports.viewAvailableMovies = async (req, res) => {
   }
 };
 
-// exports.viewAvailableMovies = async (req, res) => {
+exports.viewMovieDetails = async (req, res) => {
+  try {
+    const { movieId, cinemaId } = req.params;
+    if (!movieId || isNaN(movieId) || !cinemaId || isNaN(cinemaId)) {
+      return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
+    }
+    
+    const cachedMovie = await getAsync(`movie${movieId} for cinema${cinemaId}`);
+    if(cachedMovie){
+      return res.status(200).json({ message: "Movie fetched successfully", data: JSON.parse(cachedMovie) });
+    }
+
+    const movie = await Movies.findOne({
+      where: {
+        id: movieId,
+        cinemaId: cinemaId
+      },
+    });
+    if(!movie){
+      return res.status(404).json({ message: "No movie found for this cinema." });
+    }
+
+    await setexAsync(`movie${movieId} for cinema${cinemaId}` , 300 , JSON.stringify(movie));
+    return res.status(200).json({ message: "Movie fetched successfully", data: movie });
+    
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching movie:", data: error.message });
+  }
+};
+
+// exports.viewMovieDetails = async (req, res) => {
 //   if (req.user.role !== "customer") {
 //     return res.status(403).json({ message: "You are not authorized to view movies." });
 //   }
 
+//   const { movieId, cinemaId } = req.params;
+//   if (!movieId || isNaN(movieId) || !cinemaId || isNaN(cinemaId)) {
+//     return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
+//   }
 //   try {
-//     const cinemaID = req.params.cinemaId;
-//     const cinema = await Cinemas.findByPk(cinemaID, {
-//       include: {
-//         model: Movies,
-//         as: "movies", 
-//         through: { attributes: [] }, 
+//     const movie = await Movies.findOne({
+//       where: {
+//         id: movieId,
+//         cinemaId: cinemaId,
 //       },
+//       attributes: ['id', 'title', 'description', 'genre', 'duration', 'price', 'cinemaId'],
+//       include: [
+//         {
+//           model: Cinemas,
+//           as: 'cinema',
+//           attributes: ['name'],
+//         },
+//         {
+//           model: Showtimes,
+//           as: 'Showtimes', // Use the correct alias here
+//           where: { cinemaId },
+//           attributes: ['startTime', 'date', 'hallId'],
+//           include: [
+//             {
+//               model: Halls,
+//               as: 'hall',
+//               attributes: ['name'],
+//             },
+//           ],
+//         },
+//       ],
 //     });
+    
 
-//     if (!cinema) {
-//       return res.status(404).json({ message: "Cinema not found." });
-//     }
-//     if (!cinema.movies || !cinema.movies.length) {
-//       return res.status(404).json({ message: "No movies found for this cinema." });
+//     if (!movie) {
+//       return res.status(404).json({ message: "No movie found for this cinema." });
 //     }
 
-//     return res.status(200).json({ message: "Movies fetched successfully", data: cinema.movies });
+//     const movieDetails = {
+//       movieName: movie.title,
+//       movieDescription: movie.description,
+//       movieGenre: movie.genre,
+//       movieDuration: movie.duration,
+//       cinemas: [{
+//         cinemaName: movie.cinema.name,
+//         showtimes: movie.showtimes.map(showtime => ({
+//           startTime: showtime.startTime,
+//           date: showtime.date,
+//           hallName: showtime.hall ? showtime.hall.name : 'No Hall', 
+//         })),
+//       }],
+//     };
+
+//     return res.status(200).json({ message: "Movie details fetched successfully.", data: movieDetails, });
+
 //   } catch (error) {
 //     console.error(error);
-//     return res.status(500).json({ message: "Error fetching movies:", data: error.message });
+//     return res.status(500).json({ message: "Error fetching movie details.", data: error.message });
 //   }
 // };
-
-
-exports.viewMovieDetails = async (req, res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to view movies." });
-  }
-
-  const { movieId, cinemaId } = req.params;
-  if (!movieId || isNaN(movieId) || !cinemaId || isNaN(cinemaId)) {
-    return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
-  }
-  try {
-    const movie = await Movies.findOne({
-      where: { 
-        id: movieId ,
-        cinemaId: cinemaId,
-      },
-      attributes: ['id' , 'title' , 'description' , 'genre', 'duration' , 'Poster' , 'cinemaId'],
-      include: [
-        {
-          model: Cinemas,
-          as: 'cinema',
-          attributes: ['name'],
-        },
-        {
-          model: Showtimes,
-          as: 'showtimes', 
-          where: { cinemaId },
-          attributes: ['startTime', 'date', 'hallId'],
-          include: [
-            {
-              model: Halls,
-              as: 'hall',
-              attributes: ['name'],
-            },
-          ],
-        },
-      ],
-    });
-
-    if (!movie) {
-      return res.status(404).json({ message: "No movie found for this cinema." });
-    }
-
-    const movieDetails = {
-      movieName: movie.title,
-      movieDescription: movie.description,
-      movieGenre: movie.genre,
-      movieDuration: movie.duration,
-      moviePoster: movie.Poster,
-      cinemas: [{
-        cinemaName: movie.cinema.name,
-        showtimes: movie.showtimes.map(showtime => ({
-          startTime: showtime.startTime,
-          date: showtime.date,
-          hallName: showtime.hall ? showtime.hall.name : 'No Hall', 
-        })),
-      }],
-    };
-
-    return res.status(200).json({ message: "Movie details fetched successfully.", data: movieDetails, });
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error fetching movie details.", data: error.message });
-  }
-};
 
 exports.viewBookedSeats = async (req, res) => {
   if (req.user.role !== "customer") {
@@ -413,28 +427,17 @@ exports.viewMyBookings = async (req , res) => {
 };
 
 exports.updateInfo = async (req , res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to update information." });
-  }
-
   try{
     const customerID = req.user.id;
-    const { username , email , phoneNumber , address , profilePicture} = req.body;
+    const { username , email , phoneNumber} = req.body;
     
     const userUpdateData = {}
     if(username) userUpdateData.username = username;
     if(email) userUpdateData.email = email;
-
-    const userDetailsUpdateData = {};
-    if(phoneNumber) userDetailsUpdateData.phoneNumber = phoneNumber;
-    if(address) userDetailsUpdateData.address = address;
-    if (profilePicture !== undefined) userDetailsUpdateData.profilePicture = profilePicture;
+    if(phoneNumber) userUpdateData.phone = phoneNumber;
 
     if (Object.keys(userUpdateData).length > 0) {
       await Users.update(userUpdateData, { where: { id: customerID } });
-    }
-    if (Object.keys(userDetailsUpdateData).length > 0) {
-      await UserDetails.update(userDetailsUpdateData, { where: { userId: customerID } });
     }
 
     const updatedUsername = username || req.user.username;
