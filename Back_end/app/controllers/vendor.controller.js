@@ -269,9 +269,11 @@ exports.addMovie = async (req, res) => {
         const { title, description, genre, duration, price, poster, cinemaId } = req.body;
 
 
-        if (!title || !genre || !duration || !price || !cinemaId) {
-            return res.status(400).json({ message: "All required fields (title, genre, duration, price, cinemaId) must be provided!" });
-        }
+        if (!title || !genre || !duration || !price || !cinemaId || !poster) {
+            return res.status(400).json({
+              message: "All required fields (title, genre, duration, price, cinemaId, poster) must be provided!",
+            });
+          }
 
         const validGenres = [ 'comedy', 'drama', 'romance', 'action', 'animation', 'horror', 'sci-fi', 'fantasy', 'mystery', 'documentary'];
         if (!validGenres.includes(genre)) {
@@ -285,6 +287,19 @@ exports.addMovie = async (req, res) => {
         if (!cinema) {
             return res.status(404).json({ message: "Cinema not found or you are not authorized to add movies to this cinema." });
         }
+
+        const existingMovie = await Movies.findOne({
+            where: {
+              title,
+              cinemaId,
+            },
+          });
+      
+          if (existingMovie) {
+            return res.status(400).json({
+              message: `The movie "${title}" already exists in the specified cinema.`,
+            });
+          }
 
         const movie = await Movies.create({
             title,
