@@ -126,7 +126,7 @@ exports.viewAvailableMovies = async (req, res) => {
 
         let countusers = 0;
         let countcinemas = 0;
-        countbookings = bookings.length; 
+        let countbookings = 0; 
 
         for (let i = 0; i < users.length; i++) {
             const user = users[i]; 
@@ -142,6 +142,13 @@ exports.viewAvailableMovies = async (req, res) => {
             const cinema = cinemas[j];
             if (cinema.createdAt && new Date(cinema.createdAt) > last24Hours) {
                 countcinemas++;
+            }
+        }
+
+        for (let k = 0; k < bookings.length; k++) {
+          const booking = bookings[k];
+            if (booking.bookingDate && new Date(booking.bookingDate) > last24Hours) {
+                countbookings++;
             }
         }
 

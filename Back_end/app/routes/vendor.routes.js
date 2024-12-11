@@ -10,16 +10,16 @@ module.exports = (app) => {
   router.delete('/cinemas/delete/:id', authMiddleware, authVendor, vendorController.deleteCinema);
   router.get('/cinemas/', authMiddleware, authVendor, vendorController.listVendorCinemas);
 
-  router.post('/halls/add', authMiddleware, authVendor, vendorController.addHall);
-  router.get('/halls/:cinemaId', authMiddleware, authVendor, vendorController.listCinemaHalls);
+  router.post('/:cinemaId/addhalls', authMiddleware, authVendor, vendorController.addHall); //cinemaId(2)/addhalls
+  router.get('/:cinemaId/halls', authMiddleware, authVendor, vendorController.listCinemaHalls); //cinemaId(2)/halls
 
-  router.post('/movies/add', authMiddleware, authVendor, vendorController.addMovie);
-  router.put('/movies/update/:movieId', authMiddleware, authVendor, vendorController.updateMovie);
-  router.delete('/movies/delete/:movieId', authMiddleware, authVendor, vendorController.deleteMovie);
-  // router.get('/movies/:cinemaId', authMiddleware, authVendor, vendorController.viewAvailableMovies);
+  router.post('/:cinemaId/addmovies', authMiddleware, authVendor, vendorController.addMovie);
+  router.put('/:cinemaId/updatemovies/:movieId', authMiddleware, authVendor, vendorController.updateMovie);
+  router.delete('/:cinemaId/deletemovies/:movieId', authMiddleware, authVendor, vendorController.deleteMovie);
+  router.get('/:cinemaId/movies', authMiddleware, authVendor, vendorController.viewAvailableMovies);
 
-  // router.post('/showtimes/add', authMiddleware, authVendor, vendorController.addShowtime);
-  // router.put('/showtimes/update/:id', authMiddleware, authVendor, vendorController.updateShowTime);
-  // router.delete('/showtimes/delete/:id', authMiddleware, authVendor, vendorController.deleteShowtime);
+  router.post('/:cinemaId/addShowtime', authMiddleware, authVendor, vendorController.addShowtime); //cinemaID(1)/addShowtime <- 
+  router.put('/:cinemaId/updateShowtime/:id', authMiddleware, authVendor, vendorController.updateShowTime); //cinemaID(1)/updateShowtime/id's showtime(1) <-
+  router.delete('/:cinemaId/deleteShowtime/:id', authMiddleware, authVendor, vendorController.deleteShowtime);
   app.use('/api/vendor', router);
 };
