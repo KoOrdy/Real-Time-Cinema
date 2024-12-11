@@ -1,0 +1,40 @@
+{
+    "message": "Movies fetched successfully",
+    "data": [
+        {
+            "id": 1,
+            "Poster": "comedy1.jpg",
+            "title": "Comedy Movie One",
+            "description": "A fun and light-hearted comedy",
+            "createdAt": "2024-11-29T18:14:47.867Z"
+        },
+        {
+            "id": 2,
+            "Poster": "drama1.jpg",
+            "title": "Drama Movie One",
+            "description": "A gripping drama story",
+            "createdAt": "2024-11-29T18:14:47.867Z"
+        },
+        {
+            "id": 5,
+            "Poster": "animation1.jpg",
+            "title": "Animation Movie One",
+            "description": "An animated adventure with magical creatures",
+            "createdAt": "2024-11-29T18:14:47.867Z"
+        },
+        {
+            "id": 6,
+            "Poster": "horror1.jpg",
+            "title": "Horror Movie One",
+            "description": "A terrifying horror experience",
+            "createdAt": "2024-11-29T18:14:47.867Z"
+        },
+        {
+            "id": 7,
+            "Poster": "scifi1.jpg",
+            "title": "Sci-Fi Movie One",
+            "description": "Exploring the future through science fiction",
+            "createdAt": "2024-11-29T18:14:47.867Z"
+        }
+    ]
+}

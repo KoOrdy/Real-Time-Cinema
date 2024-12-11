@@ -1,0 +1,92 @@
+/* Allow the entire page to scroll */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow-y: scroll; /* Ensure vertical scrolling is enabled */
+    background-color: #121212; /* Example background */
+    color: #fff; /* Example text color */
+  }
+  
+  /* Container for the slider */
+  .lastadded-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    width: 90%; /* Responsive width */
+    max-width: 1200px; /* Max width for larger screens */
+    height: 300px;
+    overflow: hidden;
+    background-color: #222; /* Dark background for the slider */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Navigation buttons */
+  .lastadded-arrowleft,
+  .lastadded-arrowright {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 100;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .lastadded-arrowleft {
+    left: 10px;
+  }
+  
+  .lastadded-arrowright {
+    right: 10px;
+  }
+  
+  /* Movie wrapper */
+  .lastadded-wrapper {
+    display: flex;
+    gap: 10px; /* Spacing between movies */
+    width: 100%;
+    justify-content: center;
+    overflow: hidden; /* Hide extra content */
+  }
+  
+  /* Individual movie card */
+  .lastadded-item {
+    flex: 0 0 calc(33.33% - 10px); /* Show 3 movies in the slider */
+    background-color: #333;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: calc(33.33% - 10px);
+  }
+  
+  .lastadded-item-img {
+    max-width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  
+  .lastadded-item-title {
+    color: #fff;
+    font-size: 18px;
+    margin-top: 10px;
+  }
+  
+  /* Add margin for the rest of the page */
+  .section {
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #444;
+    border-radius: 8px;
+    text-align: center;
+  }
+  

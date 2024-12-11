@@ -1,0 +1,28 @@
+.navbar {
+  display: flex;
+  justify-content: flex-end; /* Align links to the right */
+  align-items: center; /* Center items vertically */
+  background-color: black; /* Set navbar background to black */
+  padding: 10px 20px; /* Add padding around the navbar */
+  height: 60px; /* Set a fixed height */
+}
+
+.navbar-links {
+  display: flex; /* Align links horizontally */
+  list-style: none; /* Remove default list styling */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  gap: 50px; /* Add space between the links */
+}
+
+.navbar-link {
+  color: white; /* Set link color to white */
+  text-transform: uppercase; /* Make the text uppercase */
+  font-weight: bold; /* Bold text */
+  cursor: pointer; /* Add pointer cursor on hover */
+  transition: color 0.3s; /* Smooth color transition on hover */
+}
+
+.navbar-link:hover {
+  color: red; /* Highlight color on hover */
+}
