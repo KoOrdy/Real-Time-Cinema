@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config'); 
 const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const { Json } = require("sequelize/lib/utils");
+const { where } = require("sequelize");
 
 
 exports.viewAvailableCinemas = async (req, res) => {
@@ -36,10 +37,10 @@ exports.viewLastAddedMovies = async (req, res) => {
       return res.status(400).json({ message: "Invalid cinema ID." });
     }
 
-    const cachedLastMovies = await getAsync(`lastMovies for ${cinemaID}`);
-    if(cachedLastMovies){
-      return res.status(200).json({ message: "Movies fetched successfully", data: JSON.parse(cachedLastMovies) });
-    }
+    // const cachedLastMovies = await getAsync(`lastMovies for ${cinemaID}`);
+    // if(cachedLastMovies){
+    //   return res.status(200).json({ message: "Movies fetched successfully", data: JSON.parse(cachedLastMovies) });
+    // }
 
     const movies = await Movies.findAll({
       where : { cinemaId : cinemaID },
@@ -50,7 +51,7 @@ exports.viewLastAddedMovies = async (req, res) => {
       return res.status(404).json({ message: "No movies found for this cinema." });
     }
     
-    await setexAsync(`lastMovies for ${cinemaID}`, 300, JSON.stringify(movies));
+    // await setexAsync(`lastMovies for ${cinemaID}`, 300, JSON.stringify(movies));
     return res.status(200).json({ message: "Movies fetched successfully", data: movies });
 
   } catch (error) {
@@ -113,111 +114,103 @@ exports.viewMovieDetails = async (req, res) => {
   }
 };
 
-// exports.viewMovieDetails = async (req, res) => {
-//   if (req.user.role !== "customer") {
-//     return res.status(403).json({ message: "You are not authorized to view movies." });
-//   }
-
-//   const { movieId, cinemaId } = req.params;
-//   if (!movieId || isNaN(movieId) || !cinemaId || isNaN(cinemaId)) {
-//     return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
-//   }
-//   try {
-//     const movie = await Movies.findOne({
-//       where: {
-//         id: movieId,
-//         cinemaId: cinemaId,
-//       },
-//       attributes: ['id', 'title', 'description', 'genre', 'duration', 'price', 'cinemaId'],
-//       include: [
-//         {
-//           model: Cinemas,
-//           as: 'cinema',
-//           attributes: ['name'],
-//         },
-//         {
-//           model: Showtimes,
-//           as: 'Showtimes', // Use the correct alias here
-//           where: { cinemaId },
-//           attributes: ['startTime', 'date', 'hallId'],
-//           include: [
-//             {
-//               model: Halls,
-//               as: 'hall',
-//               attributes: ['name'],
-//             },
-//           ],
-//         },
-//       ],
-//     });
+exports.viewMovieDates = async (req, res) => {
+  try {
+    const { cinemaId, movieId } = req.params;
+    if (!cinemaId || isNaN(cinemaId) || !movieId || isNaN(movieId)) {
+      return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
+    }
+    const movieDates = await Showtimes.findAll({
+      where: {
+        movieId: movieId,
+        cinemaId: cinemaId,
+      },
+      attributes: ['date'],
+    });
     
 
-//     if (!movie) {
-//       return res.status(404).json({ message: "No movie found for this cinema." });
-//     }
+    if (!movieDates.length) {
+      return res.status(404).json({ message: "No dates found for this movie." });
+    }
 
-//     const movieDetails = {
-//       movieName: movie.title,
-//       movieDescription: movie.description,
-//       movieGenre: movie.genre,
-//       movieDuration: movie.duration,
-//       cinemas: [{
-//         cinemaName: movie.cinema.name,
-//         showtimes: movie.showtimes.map(showtime => ({
-//           startTime: showtime.startTime,
-//           date: showtime.date,
-//           hallName: showtime.hall ? showtime.hall.name : 'No Hall', 
-//         })),
-//       }],
-//     };
+    return res.status(200).json({ message: "Movie dates fetched successfully.", data: movieDates});
 
-//     return res.status(200).json({ message: "Movie details fetched successfully.", data: movieDetails, });
-
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: "Error fetching movie details.", data: error.message });
-//   }
-// };
-
-exports.viewBookedSeats = async (req, res) => {
-  if (req.user.role !== "customer") {
-      return res.status(403).json({ message: "You are not authorized to view booked seats." });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching movie dates.", data: error.message });
   }
+};
 
+exports.viewMovieShowTimes = async (req, res) => {
   try {
-      const movieID = req.params.movieId;
-      const cinemaID = req.params.cinemaId; // Get cinemaId from the request
+    const { cinemaId, movieId} = req.params;
+    const { date } = req.body;
 
-      // Validate movieId and cinemaId
-      if (!movieID || isNaN(movieID)) {
-          return res.status(404).json({ message: "Invalid movie ID." });
-      }
-      if (!cinemaID || isNaN(cinemaID)) {
-          return res.status(404).json({ message: "Invalid cinema ID." });
-      }
+    if (!cinemaId || isNaN(cinemaId) || !movieId || isNaN(movieId)) {
+      return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
+    }
+    if(!date){
+      return res.status(400).json({ message: "Movie Date is required" });
+    }
+    const movieDate = new Date(date);
+    if (!movieDate || isNaN(movieDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD." });
+    }
+    const showTimes = await Showtimes.findAll({
+      where: {
+        movieId: movieId,
+        cinemaId: cinemaId,
+        date: date
+      },
+      attributes: ['startTime'],
+    });
+    
 
-      // Find bookings based on both movieId and cinemaId
-      const BookedSeats = await Bookings.findAll({ 
-          where: { movieId: movieID, cinemaId: cinemaID } 
-      });
+    if (!showTimes.length) {
+      return res.status(404).json({ message: "No show times found for this movie." });
+    }
 
-      if (!BookedSeats.length) {
-          return res.status(404).json({ message: "No bookings found for this movie." });
-      }
+    return res.status(200).json({ message: "Movie show times fetched successfully.", data: showTimes});
 
-      const seatIds = BookedSeats.map(booking => booking.seats).flat(); 
-      const seats = await Seats.findAll({
-          where: { id: seatIds },
-          attributes: ['name', 'status'],
-      });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching movie show times.", data: error.message });
+  }
+};
 
-      return res.status(200).json({
-          message: "Seats fetched successfully.",
-          data: seats.map(seat => ({
-              seatName: seat.name,
-              seatStatus: seat.status,
-          })),
-      });
+exports.viewSeatsMap = async (req, res) => {
+  try {
+    const { showTimeId } = req.params;
+
+    if (!showTimeId || isNaN(showTimeId)) {
+      return res.status(400).json({ message: "Invalid show time ID." });
+    }
+
+    const showtime = await Showtimes.findOne({
+      where: { id: showTimeId },
+      attributes: ['hallId'],
+    });
+    if(!showtime){
+      return res.status(404).json({ message: "Show Time not found"});
+    }
+    const { hallId } = showtime;
+    
+    const seats = await Seats.findAll({
+      where: { hallId: hallId },
+      attributes: ['id' , 'seatNum' , 'status'],
+    });
+    if(!seats.length){
+      return res.status(404).json({ message: "No seats found for this show time." });
+    }
+
+    return res.status(200).json({
+      message: "Seats fetched successfully.",
+      data: seats.map(seat => ({
+        seatID: seat.id,
+        seatName: seat.seatNum,
+        seatStatus: seat.status,
+      })),
+    });
 
   } catch (error) {
       console.error(error);
