@@ -16,7 +16,6 @@ module.exports = (app) => {
   router.get('/cinemas/:cinemaId/movie/:movieId/dates', authMiddleware, authCustomer , customerController.viewMovieDates);
   router.post('/cinemas/:cinemaId/movie/:movieId/showTimes', authMiddleware, authCustomer , customerController.viewMovieShowTimes);
 
-  // router.get('/cinema/:cinemaId/movie/:movieId/bookedSeats', authMiddleware, authCustomer , customerController.viewBookedSeats);
   router.get('/showTimeId/:showTimeId/seats', authMiddleware, authCustomer , customerController.viewSeatsMap);
 
   router.get('/bookings', authMiddleware, authCustomer , customerController.viewMyBookings);
