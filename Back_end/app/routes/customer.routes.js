@@ -9,16 +9,17 @@ module.exports = (app) => {
   router.get('/lastAddedMovies/:cinemaId', authMiddleware, authCustomer, customerController.viewLastAddedMovies);
   router.get('/movies/:cinemaId', authMiddleware, authCustomer , customerController.viewAvailableMovies);
 
-  router.get('/cinema/:cinemaId/movies/search', authMiddleware, authCustomer , customerController.searchMoviesByTitle); // GET /cinemas/1/movies/search?title=Avengers
+  router.get('/cinema/:cinemaId/movies/search', authMiddleware, authCustomer , customerController.searchMoviesByTitle); // GET /cinema/1/movies/search?title=Avengers
   router.get('/cinema/:cinemaId/movies/filter', authMiddleware, authCustomer , customerController.filterMovies); // GET /api/customer/cinema/:cinemaId/movies/filter?genre=action&date=2024-01-01
 
   router.get('/cinemas/:cinemaId/movie/:movieId', authMiddleware, authCustomer , customerController.viewMovieDetails);
   router.get('/cinemas/:cinemaId/movie/:movieId/dates', authMiddleware, authCustomer , customerController.viewMovieDates);
-  router.post('/cinemas/:cinemaId/movie/:movieId/showTimes', authMiddleware, authCustomer , customerController.viewMovieShowTimes);
+  router.get('/cinemas/:cinemaId/movie/:movieId/showTimes', authMiddleware, authCustomer , customerController.viewMovieShowTimes); // GET /cinemas/:cinemaId/movie/:movieId/showTimes?date=2024-12-15
+
 
   router.get('/showTimeId/:showTimeId/seats', authMiddleware, authCustomer , customerController.viewSeatsMap);
 
-  router.get('/bookings', authMiddleware, authCustomer , customerController.viewMyBookings);
+  router.get('/myBookings', authMiddleware, authCustomer , customerController.viewMyBookings);
 
   // router.post('/bookings' , authMiddleware, customerController.bookSeats);
 

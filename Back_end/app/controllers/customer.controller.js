@@ -1,4 +1,4 @@
-const { Movies, Cinemas, Halls , Users, UserDetails, Bookings, Seats, Showtimes, Notifications,} = require("../models");
+const { Movies, Cinemas, Halls , Users, Bookings, Seats, Showtimes, Notifications, BookingSeats} = require("../models");
 const db = require("../models");
 const op = db.Sequelize.Op;
 const jwt = require('jsonwebtoken');
@@ -144,7 +144,7 @@ exports.viewMovieDates = async (req, res) => {
 exports.viewMovieShowTimes = async (req, res) => {
   try {
     const { cinemaId, movieId} = req.params;
-    const { date } = req.body;
+    const date = req.query.date?.trim();
 
     if (!cinemaId || isNaN(cinemaId) || !movieId || isNaN(movieId)) {
       return res.status(400).json({ message: "Invalid movie ID or cinema ID." });
@@ -158,16 +158,16 @@ exports.viewMovieShowTimes = async (req, res) => {
     }
     const showTimes = await Showtimes.findAll({
       where: {
-        movieId: movieId,
-        cinemaId: cinemaId,
-        date: date
+        movieId,
+        cinemaId,
+        date,
       },
       attributes: ['startTime'],
     });
     
 
     if (!showTimes.length) {
-      return res.status(404).json({ message: "No show times found for this movie." });
+      return res.status(404).json({ message: "No show times found for this date." });
     }
 
     return res.status(200).json({ message: "Movie show times fetched successfully.", data: showTimes});
@@ -219,16 +219,14 @@ exports.viewSeatsMap = async (req, res) => {
 };
 
 exports.searchMoviesByTitle = async (req , res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to view movies." });
-  }
-
   try{
     const cinemaID = req.params.cinemaId;
     if(!cinemaID || isNaN(cinemaID)){
       return res.status(400).json({ message: "Invalid cinema ID." });
     }
+
     const movieTitle = req.query.title?.trim();
+
     if(!movieTitle){
       return res.status(400).json({ message: "Please provide a movie title to search for." });
     }
@@ -236,24 +234,20 @@ exports.searchMoviesByTitle = async (req , res) => {
       where: { 
         cinemaId : cinemaID,
         title: {[op.iLike] : `%${movieTitle}%`},
-       },      
+      },      
     });
     if (!movies.length) {
       return res.status(404).json({ message: "No movies found with this title." });
     }
       
-      return res.status(200).json({ message: "Movies fetched successfully", data: movies });
+    return res.status(200).json({ message: "Movies fetched successfully", data: movies });
   }catch (error) {
-   console.error(error);
-   return res.status(500).json({ message: "Error searching for movies", data: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Error searching for movies", data: error.message });
   };
 };
 
 exports.filterMovies = async (req, res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to view movies." });
-  }
-
   try {
     const cinemaID = req.params.cinemaId;
     if (!cinemaID || isNaN(cinemaID)) {
@@ -264,19 +258,20 @@ exports.filterMovies = async (req, res) => {
     const filters = { cinemaId: cinemaID };
 
     if (genre) filters.genre = genre;
-    if (date) filters['$showtimes.date$'] = date;
+    if (date) filters['$Showtimes.date$'] = date;
 
     const movies = await Movies.findAll({
       where: filters,
       include: [
         {
           model: Showtimes,
-          as: 'showtimes',
-          attributes: ['date'], 
+          as: 'Showtimes',
+          where: date ? { date: date } : {},
+          attributes: [], 
         },
       ],
     });
-    if (movies.length === 0) {
+    if (!movies.length) {
       return res.status(404).json({ message: "No movies found with the given filters." });
     }
     return res.status(200).json({ message: "Movies fetched successfully.", data: movies });
@@ -285,6 +280,101 @@ exports.filterMovies = async (req, res) => {
     return res.status(500).json({ message: "Error filtering for movies", data: error.message });
   }
 };
+
+exports.viewMyBookings = async (req , res) => {
+  try{
+    const customerID = req.user.id;
+
+    const bookings = await Bookings.findAll({ 
+      where: { customerId: customerID },
+      include:[
+        {
+          model: Cinemas,
+          as: 'cinema',
+          attributes: ['name'],
+        },
+        {
+          model: Halls,
+          as: 'hall',
+          attributes: ['name'],
+        },
+        {
+          model: Movies,
+          as: 'movie',
+          attributes: ['title'],
+        },
+        {
+          model: Showtimes,
+          as: 'showtime',
+          attributes: ['date' , 'startTime' , 'endTime'],
+        },
+        {
+          model: BookingSeats,
+          as: 'bookingSeats',
+          include: [
+            {
+              model: Seats,
+              as: 'seat',
+              attributes: ['seatNum'],
+            },
+          ],
+        },
+      ],
+    });
+
+    if(!bookings.length){
+      return res.status(404).json({ message: "No bookings found" });
+    }
+
+    return res.status(200).json({
+      message: "Bookings fetched successfully.",
+      data: bookings.map(booking => ({
+        bookingNumber: booking.id,
+        cinemaName: booking.cinema.name,
+        hallName: booking.hall.name,
+        movieName: booking.movie.title,
+        startShowTime: booking.showtime.date,
+        startShowTime: booking.showtime.startTime,
+        endShowTime: booking.showtime.endTime,
+        status: booking.bookingStatus,
+        seats: booking.bookingSeats.map((seat) => seat.seat.seatNum),
+      })),
+    });
+
+  }catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error view bookings.", error: error.message });
+  };
+};
+
+exports.updateInfo = async (req , res) => {
+  try{
+    const customerID = req.user.id;
+    const { username , email , phoneNumber} = req.body;
+    
+    const userUpdateData = {}
+    if(username) userUpdateData.username = username;
+    if(email) userUpdateData.email = email;
+    if(phoneNumber) userUpdateData.phone = phoneNumber;
+
+    if (Object.keys(userUpdateData).length > 0) {
+      await Users.update(userUpdateData, { where: { id: customerID } });
+    }
+
+    const updatedUsername = username || req.user.username;
+    const token = jwt.sign(
+      { id: customerID, username: updatedUsername ,role: 'customer'}, 
+      config.secret, 
+      { expiresIn: '1h' }
+    );
+    return res.status(200).json({ message: "Information updated successfully." , token: token})
+
+  }catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error updating user information.", error: error.message });
+  };
+};
+
 
 // exports.bookSeats = async (req, res) => {
 //   const { customerId, cinemaId, hallId, showtimeId, movieId, seatIds } = req.body;
@@ -361,90 +451,5 @@ exports.filterMovies = async (req, res) => {
 //     return res.status(500).json({ message: "Error canceling booking.", error: error.message });
 //   };
 // };
-
-exports.viewMyBookings = async (req , res) => {
-  if (req.user.role !== "customer") {
-    return res.status(403).json({ message: "You are not authorized to view bookings." });
-  }
-
-  try{
-    const customerID = req.user.id;
-
-    const bookings = await Bookings.findAll({ 
-      where: { customerId: customerID },
-      include: [
-        {
-          model: Cinemas,
-          as:'cinema',
-          attributes: ['name'],
-        },
-        {
-          model: Halls,
-          as: 'hall',
-          attributes: ['name']
-        },
-        {
-          model: Movies,
-          as: 'movie',
-          attributes: ['title'],
-        },
-        {
-          model: Showtimes,
-          as: 'showtime',
-          attributes: ['startTime' , 'endTime'],
-        }
-      ]
-    });
-    if(!bookings.length){
-      return res.status(404).json({ message: "No bookings found" });
-    }
-
-    return res.status(200).json({
-      message: "Bookings fetched successfully.",
-      data: bookings.map(booking => ({
-        id: booking.id,
-        cinemaName: booking.cinema.name,
-        hallName: booking.hall.name,
-        movieName: booking.movie.title,
-        startShowTime: booking.showtime.startTime,
-        endShowTime: booking.showtime.endTime,
-        seats: booking.seats,
-        status: booking.status,
-      })),
-    });
-
-  }catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error view bookings.", error: error.message });
-  };
-};
-
-exports.updateInfo = async (req , res) => {
-  try{
-    const customerID = req.user.id;
-    const { username , email , phoneNumber} = req.body;
-    
-    const userUpdateData = {}
-    if(username) userUpdateData.username = username;
-    if(email) userUpdateData.email = email;
-    if(phoneNumber) userUpdateData.phone = phoneNumber;
-
-    if (Object.keys(userUpdateData).length > 0) {
-      await Users.update(userUpdateData, { where: { id: customerID } });
-    }
-
-    const updatedUsername = username || req.user.username;
-    const token = jwt.sign(
-      { id: customerID, username: updatedUsername ,role: 'customer'}, 
-      config.secret, 
-      { expiresIn: '1h' }
-    );
-    return res.status(200).json({ message: "Information updated successfully." , token: token})
-
-  }catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error updating user information.", error: error.message });
-  };
-};
 
 
