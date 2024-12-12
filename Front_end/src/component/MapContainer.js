@@ -1,64 +1,38 @@
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../config/axiosInstance";
 
-const MapContainer = ({ coordinates, mapContainerStyle, mainLocation }) => {
+const MapContainer = ({ coordinates, mapContainerStyle, locations, onMarkerClick }) => {
   const navigate = useNavigate();
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: "AIzaSyBNlTpKQUSKdcM9skmPcEKj2_--4tOAaP4", 
   });
 
-  const [cinemas, setCinemas] = useState([]);
-
-  
-  useEffect(() => {
-    const fetchCinemas = async () => {
-      try {
-        const response = await axiosInstance.get("/customer/cinemas");
-        setCinemas(response.data); 
-      } catch (error) {
-        console.error("Error fetching cinemas:", error);
-      }
-    };
-
-    fetchCinemas();
-  }, []);
-
-  const handleMarkerClick = (cinemaId) => {
-   
-    localStorage.setItem("selectedCinemaId", cinemaId);
-      navigate("/"); 
-  };
-
   return isLoaded ? (
-    <>
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        center={coordinates}
-        zoom={8}
-      >
-        {mainLocation && (
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      center={coordinates}
+      zoom={8} 
+    >
+
+      {locations.length > 0 ? (
+        locations.map((cinema) => (
           <Marker
-            position={mainLocation}
-          />
-        )}
-        {cinemas.map((cinema) => (
-          <Marker
-            key={cinema.id}
-            position={{
-              lat: parseFloat(cinema.location.latitude),
-              lng: parseFloat(cinema.location.longitude),
+            key={cinema.cinemaId}
+            position={{ lat: cinema.latitude, lng: cinema.longitude }}
+            onClick={() => {
+
+              onMarkerClick(cinema.cinemaId); 
+              navigate(cinema.cinemaLink); 
             }}
-            onClick={() => handleMarkerClick(cinema.id)} 
           />
-        ))}
-      </GoogleMap>
-    </>
+        ))
+      ) : (
+        <p>No cinema locations available.</p>
+      )}
+    </GoogleMap>
   ) : (
-    <></>
+    <p>Loading map...</p> 
   );
 };
 

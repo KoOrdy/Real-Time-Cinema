@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "../config/axiosInstance";
 import "./AdminPage.css";
 import { Link } from "react-router-dom";
+import useAuthenticatedQuery from "../hooks/useAuthenticatedQuery";
 
 const Vendor = () => {
   const [vendors, setVendors] = useState([]);
@@ -9,37 +10,20 @@ const Vendor = () => {
   const [newVendorUsername, setNewVendorUsername] = useState("");
   const [newVendorEmail, setNewVendorEmail] = useState("");
   const [newVendorPassword, setNewVendorPassword] = useState(""); // Added state for password
+  const [queryVersion, setQueryVersion] = useState(1);
+  const token = localStorage.getItem("token");
+  const { status, data } = useAuthenticatedQuery({
+    queryKey: ["vendors",`${queryVersion}`],
+    url:"/admin/vendor",
+    config: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  });
+  
+console.log(data);
 
-  useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        console.log("Token from localStorage:", token);
-        if (!token) {
-          alert("Token is missing. Please log in again.");
-          return;
-        }
-
-        const { data, status } = await axiosInstance.get("/admin/vendor", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (status === 200) {
-          setVendors(data);
-          console.log(data);
-          
-        } else {
-          alert("Failed to fetch vendors");
-        }
-      } catch (error) {
-        console.error("Error fetching vendors:", error.response || error);
-      }
-    };
-
-    fetchVendors();
-  }, []);
 
   const handleAddVendor = () => {
     setShowModal(true);
@@ -62,7 +46,7 @@ const Vendor = () => {
       const newVendor = {
         username: newVendorUsername,
         email: newVendorEmail,
-        password: newVendorPassword, // Include password in the payload
+        password: newVendorPassword, 
       };
 
       const { data, status } = await axiosInstance.post("/admin/", newVendor, {
@@ -77,8 +61,8 @@ const Vendor = () => {
         setShowModal(false);
         setNewVendorUsername("");
         setNewVendorEmail("");
-        setNewVendorPassword(""); // Reset password field
-
+        setNewVendorPassword(""); 
+        setQueryVersion(queryVersion + 1);
       } else {
         alert("Failed to add vendor. Please try again.");
       }
@@ -91,7 +75,7 @@ const Vendor = () => {
   const handleModalCancel = () => {
     setNewVendorUsername("");
     setNewVendorEmail("");
-    setNewVendorPassword(""); // Reset password field
+    setNewVendorPassword(""); 
     setShowModal(false);
   };
 
@@ -118,9 +102,10 @@ const Vendor = () => {
       });
   
       if (status === 200) {
-      
-        setVendors((prevVendors) => prevVendors.filter((vendor) => vendor.id !== id));
+
         alert(`Vendor with ID: ${id} has been deleted successfully.`);
+        setQueryVersion(queryVersion + 1);
+      
       } else {
         alert("Failed to delete the vendor. Please try again.");
       }
@@ -166,7 +151,7 @@ const Vendor = () => {
           </tr>
         </thead>
         <tbody>
-          {vendors.map((vendor) => (
+          {data?.map((vendor) => (
             <tr key={vendor.id}>
               <td>{vendor.id}</td>
               <td>{vendor.username}</td>

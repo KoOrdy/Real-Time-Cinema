@@ -1,42 +1,23 @@
 import React from 'react';
 import './App.css';
-import Login from "./forms/login";
-import Register from "./forms/register";
-import { BrowserRouter as Router, Routes, Route, RouterProvider } from "react-router-dom";
-import Navbar from "./component/navbar";
-import Slider from "./component/slider";
-import Lastadded from "./component/lastadded";
-import lastAddedData from "./lastAdded.json";
-import Vendor from "./component/admin"
-import Viewcustomer from "./component/viewcustomer"
-import Updatecinema from "./component/updatecinema"
-import MoviesPage from "./component/movies"
-import Home from "./component/home"
-import Cinema from "./component/cinemas"
+
+import { RouterProvider } from "react-router-dom";
+
 import router from './router';
 
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
+const queryClient = new QueryClient();
 
 const App = () => {
   return (
-   
-    <div className="App">
-    {/* <Router>
-      <Routes>
-     
-      
-         <Route path="/updatecustomer" element={<Updatecinema />} />  
-      </Routes>
-    </Router> */}
- 
-  
-   {/* <Updatecinema/> */}
-  
 
-
-   <RouterProvider router={router} />
-
-    </div>
+<QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
  
   );
 }

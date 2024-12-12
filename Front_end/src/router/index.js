@@ -7,6 +7,7 @@ import Vendor from "../component/admin";
 import Register from "../forms/register";
 import Viewcustomer from "../component/viewcustomer";
 import Updatecinema from "../component/updatecinema";
+import MapPag from "../component/mapcomp";
 
 
 
@@ -50,8 +51,8 @@ const router = createBrowserRouter(
           path="/updatecinema" 
           element={ <Updatecinema/>} 
          />
-         
-        
+         <Route path="/mapPage" element={<MapPag />} />
+                
       </Route>
 
       

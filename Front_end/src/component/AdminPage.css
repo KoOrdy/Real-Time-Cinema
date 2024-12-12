@@ -10,6 +10,7 @@ body {
     color: #ffffff; /* Light text color */
     font-family: Arial, sans-serif;
     line-height: 1.5;
+    overflow: auto;
 }
 
 /* Admin Page Container */

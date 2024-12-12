@@ -1,4 +1,5 @@
 const { Movies, Cinemas, Showtimes, Halls, Notifications ,Bookings ,Users, Seats} = require('../models');
+const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email.config');
@@ -9,6 +10,7 @@ const transporter = nodemailer.createTransport(emailConfig);
 //-----------------add cinema----------------------//
 
 exports.addCinema = async (req, res) => {
+    const vendorId = req.user.id;
     const { name, location, contactInfo } = req.body;
 
     if (!name || !location || !contactInfo) {
@@ -39,6 +41,7 @@ exports.addCinema = async (req, res) => {
             vendorId: req.user.id,
         });
 
+        // await redisClient.del(`cinemas for ${vendorId} `);
         res.status(201).send({ message: "Cinema added successfully!", cinema });
     } catch (error) {
         res.status(500).send({ message: "Error: " + error.message });
@@ -48,6 +51,7 @@ exports.addCinema = async (req, res) => {
 //-----------------update cinema----------------------//
 
 exports.updateCinema = async (req, res) => {
+    const vendorId = req.user.id;
     const { id } = req.params;
     const { name, location, contactInfo } = req.body;
 
@@ -82,6 +86,8 @@ exports.updateCinema = async (req, res) => {
         if (contactInfo) updatedData.contactInfo = contactInfo;
 
         await cinema.update(updatedData);
+        // await redisClient.del(`cinemas for ${vendorId} `);
+
         res.status(200).send({ message: "Cinema updated successfully!", cinema });
 
     } catch (error) {
@@ -104,6 +110,7 @@ exports.deleteCinema = async (req, res) => {
             });
         }
 
+        // await redisClient.del(`cinemas for ${vendorId} `);
         await cinema.destroy();
 
         res.status(200).send({ message: "Cinema deleted successfully!" });
@@ -115,14 +122,14 @@ exports.deleteCinema = async (req, res) => {
 //-----------------list cinemas----------------------//
 exports.listVendorCinemas = async (req, res) => {
     try {
-        if (req.user.role !== "vendor") {
-            return res.status(403).json({
-                message: "You are not authorized to view cinemas.",
-            });
-        }
 
         const vendorId = req.user.id;
+        // const cachedCinemas = await getAsync(`cinemas for ${vendorId} `);
 
+        // if (cachedCinemas) {
+        //   return res.send(JSON.parse(cachedCinemas)); 
+        // }
+        
         const cinemas = await Cinemas.findAll({
             where: { vendorId },
             attributes: ["id" , "name", "location", "contactInfo"],
@@ -133,6 +140,7 @@ exports.listVendorCinemas = async (req, res) => {
                 message: "No cinemas found for this vendor.",
             });
         }
+        // setexAsync(`cinemas for ${vendorId} `, 300, JSON.stringify(cinemas)); 
 
         return res.status(200).json({
             message: "Cinemas fetched successfully.",
