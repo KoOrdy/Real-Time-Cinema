@@ -20,6 +20,7 @@ module.exports = (app) => {
 
   router.post('/:cinemaId/addShowtime', authMiddleware, authVendor, vendorController.addShowtime); //cinemaID(1)/addShowtime <- 
   router.put('/:cinemaId/updateShowtime/:id', authMiddleware, authVendor, vendorController.updateShowTime); //cinemaID(1)/updateShowtime/id's showtime(1) <-
+  router.get('/:hallId/showtimes', authMiddleware, authVendor, vendorController.listHallShowtimes);
   router.delete('/:cinemaId/deleteShowtime/:id', authMiddleware, authVendor, vendorController.deleteShowtime);
   app.use('/api/vendor', router);
 };

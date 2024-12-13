@@ -17,7 +17,7 @@ exports.addCinema = async (req, res) => {
         return res.status(400).send({ message: "All fields are required!" });
     }
 
-    try {
+    try {b 
         const vendorExists = await Users.findOne({
             where: { id: req.user.id, role: 'vendor' },
         });
@@ -682,9 +682,59 @@ exports.updateShowTime = async (req, res) => {
     }
 };
 
+//-----------------list showtime----------------------//
 
+exports.listHallShowtimes = async (req, res) => {
+    const { hallId } = req.params;
 
-// //-----------------delete showtime----------------------//
+    try {
+        const hall = await Halls.findOne({
+            where: { id: hallId },
+            include: {
+                model: Cinemas,
+                as: 'cinema',
+                where: { vendorId: req.user.id },
+                attributes: ['id'],
+            },
+        });
+
+        if (!hall) {
+            return res.status(404).json({ message: "Hall not found or you are not authorized to view showtimes for this hall." });
+        }
+        const showtimes = await Showtimes.findAll({
+            where: { hallId },
+            attributes: ['date', 'startTime', 'endTime'],
+            include: {
+                model: Movies,
+                as: 'movie',
+                attributes: ['title'],
+            },
+            order: [['date', 'ASC'], ['startTime', 'ASC']],
+        });
+
+        if (!showtimes || showtimes.length === 0) {
+            return res.status(404).json({ message: "No showtimes found for this hall." });
+        }
+
+        res.status(200).json({
+            message: "Showtimes retrieved successfully!",
+            data: showtimes.map(showtime => ({
+                date: showtime.date,
+                movieName: showtime.movie.title,
+                startTime: showtime.startTime,
+                endTime: showtime.endTime,
+            })),
+        });
+    } catch (error) {
+        console.error("Error retrieving showtimes:", error);
+        res.status(500).json({
+            message: "Error retrieving showtimes.",
+            error: error.message,
+        });
+    }
+};
+
+//-----------------delete showtime----------------------//
 
 exports.deleteShowtime = async (req, res) => {
     const { id,cinemaId } = req.params;
