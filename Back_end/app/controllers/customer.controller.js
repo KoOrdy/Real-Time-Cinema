@@ -395,11 +395,6 @@ exports.bookSeat = async (req , res) => {
     return res.status(400).json({ message: "All fields are required, and seat IDs must be provided!" });
   }   
 
-  const validSeatIds = Array.isArray(seatIds) ? seatIds : [];
-  if (!validSeatIds.length) {
-    return res.status(400).json({ message: "You must specify at least one seat to book." });
-  }
-
   try{ 
 
     const seats = await Seats.findAll({
@@ -437,12 +432,11 @@ exports.bookSeat = async (req , res) => {
       { transaction },
     );
 
-    const bookedSeats = validSeatIds.map((seatId) => ({
+    const bookedSeats = seatIds.map((seatId) => ({
       bookingId: newBooking.id,
       seatId,
     }));
-
-    await BookingSeats.bulkCreate(bookedSeats , { transaction });
+    await BookingSeats.bulkCreate(bookedSeats, { transaction });
 
     
     const customerEmail = await Users.findOne({ 
@@ -457,32 +451,26 @@ exports.bookSeat = async (req , res) => {
     };
     
     try {
-
       await sendNotification({ customer: customerInfo, bookingId: newBooking.id });
-
     } catch (notificationError) {
       console.error("Notification failed:", notificationError.message);
-
-      // Rollback if notification fails
       await transaction.rollback();
       return res.status(500).json({ message: "Booking failed at notification stage.", error: notificationError.message });
     }
-
     await transaction.commit();
 
     return res.status(201).json({ message: "Booking created successfully." });
 
   }catch (error) {
     console.error(error);
-
     if (transaction) await transaction.rollback();
-
     return res.status(500).json({ message: "Error booking seat", error: error.message });
   };
 };
-
 const getData = async ({ bookingId }) => {
   try {
+    console.log(`Fetching data for bookingId: ${bookingId}`);
+
     const data = await Bookings.findOne({
       where: { id: bookingId },
       include: [
@@ -514,13 +502,14 @@ const getData = async ({ bookingId }) => {
               model: Seats,
               as: 'seat',
               attributes: ['seatNum'],
-            },
+            }
           ],
         },
       ],
     });
 
     if (!data) {
+      console.log(`No booking found for ID: ${bookingId}`);
       return { message: "No data found" };
     }
 
@@ -528,30 +517,32 @@ const getData = async ({ bookingId }) => {
       message: "Data fetched successfully.",
       data: {
         bookingNumber: bookingId,
-        cinemaName: data.cinema.name,
-        hallName: data.hall.name,
-        movieName: data.movie.title,
-        movieDate: data.showtime.date,
-        showStartTime: data.showtime.startTime,
-        showEndTime: data.showtime.endTime,
-        status: data.bookingStatus,
-        seats: data.bookingSeats.map((seat) => seat.seat.seatNum),
-        totalPrice: data.totalPrice,
+        cinemaName: data.cinema?.name || 'N/A',
+        hallName: data.hall?.name || 'N/A',
+        movieName: data.movie?.title || 'N/A',
+        movieDate: data.showtime?.date || 'N/A',
+        showStartTime: data.showtime?.startTime || 'N/A',
+        showEndTime: data.showtime?.endTime || 'N/A',
+        status: data.bookingStatus || 'N/A',
+        seats: data.bookingSeats?.map((seat) => seat.seat?.seatNum) || [],
+        totalPrice: data.totalPrice || 0,
       },
     };
 
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching data:', error.message);
     return { message: "Error fetching data.", error: error.message };
   }
 };
 
 const sendNotification = async ({ customer , bookingId }) => {
   try{
-    const { data } = await getData({ bookingId });
-    if (!data) {
+    const result = await getData({ bookingId });
+    if (!result.data) {
       throw new Error("Booking data not found");
     }
+
+    const data = result.data;
     
     await Notifications.create({
       userId: customer.id,           
@@ -618,23 +609,25 @@ exports.cancelBooking = async (req , res) => {
       return res.status(404).json({ message: "No booking for this ID." });
     }
 
-    await Bookings.update({ bookingStatus: "canceled"} , {where : { id: bookingId } , transaction});
+    await Bookings.update({ bookingStatus: "cancelled"} , {where : { id: bookingId } , transaction});
 
-    const seatIds = await BookingSeats.findAll({
+    const bookingSeats = await BookingSeats.findAll({
       where: { bookingId },
       attributes: ['seatId'],
       raw: true,
-    }).map(seat => seat.seatId);
+    });
+
+    const seatIds = bookingSeats.map(seat => seat.seatId);
 
     await Seats.update( { status: "available" } , { where: { id: seatIds } , transaction} );
 
     await transaction.commit();
 
-    return res.status(200).json({ message: "Booking canceled successfully" });
+    return res.status(200).json({ message: "Booking cancelled successfully" });
   }catch (error) {
     console.error(error);
     if (transaction) await transaction.rollback();
-    return res.status(500).json({ message: "Error canceling booking", error: error.message });
+    return res.status(500).json({ message: "Error cancelling booking", error: error.message });
   };
 };
 
