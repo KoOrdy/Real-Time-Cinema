@@ -685,37 +685,47 @@ exports.updateShowTime = async (req, res) => {
 //-----------------list showtime----------------------//
 
 exports.listHallShowtimes = async (req, res) => {
-    const { hallId } = req.params;
+    const { cinemaId, hallId } = req.params;
 
     try {
+        // Fetch the hall, ensuring it matches both the hallId and cinemaId
         const hall = await Halls.findOne({
-            where: { id: hallId },
+            where: { id: hallId, cinemaId }, // Ensure cinemaId and hallId match
             include: {
                 model: Cinemas,
                 as: 'cinema',
-                where: { vendorId: req.user.id },
-                attributes: ['id'],
+                where: { vendorId: req.user.id }, // Ensure vendor owns the cinema
+                attributes: ['id'], // Fetch only necessary data
             },
         });
 
+        // If no hall is found, return an error
         if (!hall) {
-            return res.status(404).json({ message: "Hall not found or you are not authorized to view showtimes for this hall." });
+            return res.status(404).json({
+                message: "Hall not found or does not belong to the specified cinema.",
+            });
         }
+
+        // Fetch the showtimes for the hall
         const showtimes = await Showtimes.findAll({
             where: { hallId },
             attributes: ['date', 'startTime', 'endTime'],
             include: {
                 model: Movies,
                 as: 'movie',
-                attributes: ['title'],
+                attributes: ['title'], // Fetch movie title only
             },
             order: [['date', 'ASC'], ['startTime', 'ASC']],
         });
 
+        // If no showtimes are found, return an appropriate message
         if (!showtimes || showtimes.length === 0) {
-            return res.status(404).json({ message: "No showtimes found for this hall." });
+            return res.status(404).json({
+                message: "No showtimes found for this hall.",
+            });
         }
 
+        // Return the showtimes data
         res.status(200).json({
             message: "Showtimes retrieved successfully!",
             data: showtimes.map(showtime => ({
@@ -733,6 +743,7 @@ exports.listHallShowtimes = async (req, res) => {
         });
     }
 };
+
 
 //-----------------delete showtime----------------------//
 
