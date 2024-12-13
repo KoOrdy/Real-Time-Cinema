@@ -172,7 +172,7 @@ exports.viewMovieShowTimes = async (req, res) => {
         cinemaId,
         date,
       },
-      attributes: ['startTime'],
+      attributes: ['id','startTime'],
     });
     
 
