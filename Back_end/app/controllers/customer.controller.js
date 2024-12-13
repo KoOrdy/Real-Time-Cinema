@@ -1,4 +1,4 @@
-const { Movies, Cinemas, Halls , Users, Bookings, Seats, Showtimes, Notifications, BookingSeats} = require("../models");
+const { Movies, Cinemas, Halls , Users, Bookings, Seats, Showtimes, BookingSeats} = require("../models");
 const db = require("../models");
 const op = db.Sequelize.Op;
 const jwt = require('jsonwebtoken');
@@ -450,14 +450,9 @@ exports.bookSeat = async (req , res) => {
       email: customerEmail.email,
     };
     
-    try {
-      await sendNotification({ customer: customerInfo, bookingId: newBooking.id });
-    } catch (notificationError) {
-      console.error("Notification failed:", notificationError.message);
-      await transaction.rollback();
-      return res.status(500).json({ message: "Booking failed at notification stage.", error: notificationError.message });
-    }
     await transaction.commit();
+    console.log('Transaction committed.');
+    await sendEmail({ customer: customerInfo, bookingId: newBooking.id });
 
     return res.status(201).json({ message: "Booking created successfully." });
 
@@ -467,67 +462,44 @@ exports.bookSeat = async (req , res) => {
     return res.status(500).json({ message: "Error booking seat", error: error.message });
   };
 };
+
 const getData = async ({ bookingId }) => {
   try {
-    console.log(`Fetching data for bookingId: ${bookingId}`);
-
     const data = await Bookings.findOne({
       where: { id: bookingId },
       include: [
-        {
-          model: Cinemas,
-          as: 'cinema',
-          attributes: ['name'],
-        },
-        {
-          model: Halls,
-          as: 'hall',
-          attributes: ['name'],
-        },
-        {
-          model: Movies,
-          as: 'movie',
-          attributes: ['title'],
-        },
-        {
-          model: Showtimes,
-          as: 'showtime',
-          attributes: ['date', 'startTime', 'endTime'],
-        },
-        {
-          model: BookingSeats,
+        { model: Cinemas, as: 'cinema', attributes: ['name'] },
+        { model: Halls, as: 'hall', attributes: ['name'] },
+        { model: Movies, as: 'movie', attributes: ['title'] },
+        { model: Showtimes, as: 'showtime', attributes: ['date', 'startTime', 'endTime'] },
+        { 
+          model: BookingSeats, 
           as: 'bookingSeats',
-          include: [
-            {
-              model: Seats,
-              as: 'seat',
-              attributes: ['seatNum'],
-            }
-          ],
+          include: [{ model: Seats, as: 'seat', attributes: ['seatNum'] }],
         },
       ],
     });
 
     if (!data) {
-      console.log(`No booking found for ID: ${bookingId}`);
+      console.error(`No booking found for ID: ${bookingId}`);
       return { message: "No data found" };
     }
 
-    return {
-      message: "Data fetched successfully.",
-      data: {
-        bookingNumber: bookingId,
-        cinemaName: data.cinema?.name || 'N/A',
-        hallName: data.hall?.name || 'N/A',
-        movieName: data.movie?.title || 'N/A',
-        movieDate: data.showtime?.date || 'N/A',
-        showStartTime: data.showtime?.startTime || 'N/A',
-        showEndTime: data.showtime?.endTime || 'N/A',
-        status: data.bookingStatus || 'N/A',
-        seats: data.bookingSeats?.map((seat) => seat.seat?.seatNum) || [],
-        totalPrice: data.totalPrice || 0,
-      },
+    // Transforming fetched data into the desired format
+    const transformedData = {
+      bookingNumber: bookingId,
+      cinemaName: data.cinema.name,
+      hallName: data.hall.name,
+      movieName: data.movie.title,
+      movieDate: data.showtime.date,
+      showStartTime: data.showtime.startTime,
+      showEndTime: data.showtime.endTime,
+      status: data.bookingStatus,
+      seats: data.bookingSeats.map((seat) => seat.seat.seatNum),
+      totalPrice: data.totalPrice,
     };
+
+    return { message: "Data fetched successfully.", data: transformedData };
 
   } catch (error) {
     console.error('Error fetching data:', error.message);
@@ -535,7 +507,7 @@ const getData = async ({ bookingId }) => {
   }
 };
 
-const sendNotification = async ({ customer , bookingId }) => {
+const sendEmail = async ({ customer , bookingId }) => {
   try{
     const result = await getData({ bookingId });
     if (!result.data) {
@@ -543,12 +515,6 @@ const sendNotification = async ({ customer , bookingId }) => {
     }
 
     const data = result.data;
-    
-    await Notifications.create({
-      userId: customer.id,           
-      type: 'email',                 
-      message: `Booking Number: ${data.bookingNumber} confirmed at ${data.cinemaName} for movie ${data.movieName}. Details: Date: ${data.movieDate}, Time: ${data.showStartTime} - ${data.showEndTime}, Seats: ${data.seats.join(', ')}, Total Price: ${data.totalPrice}`
-    });
 
     const mailOptions = {
       from: emailConfig.auth.user,
@@ -606,7 +572,7 @@ exports.cancelBooking = async (req , res) => {
     const { bookingId } = req.params;
     const booking = await Bookings.findOne({ where: { id: bookingId } });
     if(!booking){
-      return res.status(404).json({ message: "No booking for this ID." });
+      return res.status(404).json({ message: "Booking not found." });
     }
 
     await Bookings.update({ bookingStatus: "cancelled"} , {where : { id: bookingId } , transaction});
@@ -630,32 +596,3 @@ exports.cancelBooking = async (req , res) => {
     return res.status(500).json({ message: "Error cancelling booking", error: error.message });
   };
 };
-
-
-// exports.cancelBooking = async (req, res) => {
-//   const { bookingId } = req.params;
-
-//   try {
-//     const booking = await sequelize.models.Bookings.findByPk(bookingId);
-
-//     if (!booking) {
-//       return res.status(404).json({ message: "Booking not found." });
-//     }
-
-//     // Update seat statuses back to "available"
-//     await sequelize.models.Seats.update(
-//       { status: 'available' },
-//       { where: { id: booking.seats } }
-//     );
-
-//     // Update booking status to "canceled"
-//     booking.status = 'canceled';
-//     await booking.save();
-
-//     return res.status(200).json({ message: "Booking canceled successfully!", data: booking });
-//   }catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: "Error canceling booking.", error: error.message });
-//   };
-// };
-

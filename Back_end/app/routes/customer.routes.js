@@ -25,11 +25,5 @@ module.exports = (app) => {
   router.post('/bookSeat' , authMiddleware, authCustomer , customerController.bookSeat);
   router.patch('/bookingId/:bookingId/cancelBooking' , authMiddleware, authCustomer , customerController.cancelBooking);
 
-  // router.get('/notification', authMiddleware, authCustomer , customerController.sendNotification);
-
-
-
-
-
   app.use('/api/customer', router);
 };
