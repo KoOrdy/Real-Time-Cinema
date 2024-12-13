@@ -389,9 +389,9 @@ exports.bookSeat = async (req , res) => {
   const transaction = await db.sequelize.transaction();
 
   const customerId = req.user.id;
-  const { cinemaId , movieId , showtimeId , seatIds , totalPrice} = req.body;
+  const { cinemaId , hallId , movieId , showtimeId , seatIds , totalPrice} = req.body;
 
-  if (!cinemaId || !movieId || !showtimeId || !totalPrice || !Array.isArray(seatIds) || !seatIds.length) {
+  if (!cinemaId || !hallId || !movieId || !showtimeId || !totalPrice || !Array.isArray(seatIds) || !seatIds.length) {
     return res.status(400).json({ message: "All fields are required, and seat IDs must be provided!" });
   }   
 
@@ -400,6 +400,7 @@ exports.bookSeat = async (req , res) => {
     const seats = await Seats.findAll({
       where: {
         id: seatIds,
+        hallId,
         cinemaId,
         status: 'available', // Only available seats
       },
@@ -416,19 +417,13 @@ exports.bookSeat = async (req , res) => {
         transaction,
       }
     );
-    const showtime = await Showtimes.findOne({
-      where: { id: showtimeId },
-      attributes: ['hallId'],
-    })
-
-    const hallId = showtime.hallId;
 
     const newBooking = await Bookings.create(
       {
         customerId,
         cinemaId,
-        movieId,
         hallId,
+        movieId,
         showtimeId,
         totalPrice,
         bookingStatus: "confirmed",
@@ -526,38 +521,40 @@ const sendEmail = async ({ customer , bookingId }) => {
       to: customer.email,
       subject: 'Booking is Confirmed',
       html: `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: white;">
-              <div style="max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                  <!-- Header -->
-                  <div style="background-color: #4CAF50; padding: 20px; text-align: center; color: white;">
-                      <h1 style="margin: 0; font-size: 24px;">🎥 Your Booking is Confirmed!</h1>
-                      <p style="margin: 0; font-size: 14px;">Thank you for booking with us!</p>
-                  </div>
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background-color: #4CAF50; padding: 20px; text-align: center; color: white;">
+            <h1 style="margin: 0; font-size: 24px;">🎥 Your Booking is Confirmed!</h1>
+            <p style="margin: 0; font-size: 14px;">Thank you for booking with us!</p>
+        </div>
 
-                  <!-- Body -->
-                  <div style="padding: 20px; color: white;">
-                      <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.name}😁</strong>,</p>
-                      <p style="margin: 10px 0;">Thank you for booking with us! We are excited to confirm your booking. Here are your booking details:</p>
-                      <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #4CAF50; border-radius: 5px; margin: 10px 0; color: white;">
-                          <p style="margin: 5px 0;"><strong>Booking Number:</strong> ${data.bookingNumber}</p>
-                          <p style="margin: 5px 0;"><strong>Cinema:</strong> ${data.cinemaName}</p>
-                          <p style="margin: 5px 0;"><strong>Hall:</strong> ${data.hallName}</p>
-                          <p style="margin: 5px 0;"><strong>Movie:</strong> ${data.movieName}</p>
-                          <p style="margin: 5px 0;"><strong>Date:</strong> ${data.movieDate}</p>
-                          <p style="margin: 5px 0;"><strong>Start Time:</strong> ${data.showStartTime}</p>
-                          <p style="margin: 5px 0;"><strong>End Time:</strong> ${data.showEndTime}</p>
-                          <p style="margin: 5px 0;"><strong>Seats:</strong> ${data.seats.join(', ')}</p>
-                          <p style="margin: 5px 0;"><strong>Total Price:</strong> ${data.totalPrice}</p>
-                      </div>
-                      <p style="margin: 20px 0 0;">We look forward to seeing you at the cinema. Thank you for choosing us!</p>
+        <!-- Body -->
+        <div style="padding: 20px;">
+            <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.name}😁</strong>,</p>
+            <p style="margin: 10px 0;">Thank you for booking with us! We are excited to confirm your booking. Here are your booking details:</p>
+            <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #4CAF50; border-radius: 5px; margin: 10px 0;">
+                <p style="margin: 5px 0;"><strong>Booking Number:</strong> ${data.bookingNumber}</p>
+                <p style="margin: 5px 0;"><strong>Cinema:</strong> ${data.cinemaName}</p>
+                <p style="margin: 5px 0;"><strong>Hall:</strong> ${data.hallName}</p>
+                <p style="margin: 5px 0;"><strong>Movie:</strong> ${data.movieName}</p>
+                <p style="margin: 5px 0;"><strong>New Date:</strong> ${data.movieDate || showtime.date}</p>
+                <p style="margin: 5px 0;"><strong>New Start Time:</strong> ${data.showStartTime || showtime.startTime}</p>
+                <p style="margin: 5px 0;"><strong>New End Time:</strong> ${data.showEndTime || showtime.endTime}</p>
+                <p style="margin: 5px 0;"><strong>Seats:</strong> ${data.seats.join(', ')}</p>
+                <p style="margin: 5px 0;"><strong>Total Price:</strong> ${data.totalPrice}</p>
+            </div>
+            <p style="margin: 20px 0 0;">We look forward to seeing you at the cinema. Thank you for choosing us!</p>
                   </div>
+        </div>
 
-                  <!-- Footer -->
-                  <div style="background-color: #f7f7f7; padding: 10px; text-align: center; border-top: 1px solid #ddd;">
-                      <p style="font-size: 14px; margin: 0; color: white;">❤ Regards, <br> Your Cinema Team</p>
-                  </div>
-              </div>
-          </div>
+        <!-- Footer -->
+        <div style="background-color: #f7f7f7; padding: 10px; text-align: center; border-top: 1px solid #ddd;">
+            <p style="font-size: 14px; margin: 0; color: #555;">❤ Regards, <br> Your Cinema Team</p>
+        </div>
+    </div>
+</div>
+
         `
     };
 
@@ -568,6 +565,7 @@ const sendEmail = async ({ customer , bookingId }) => {
     return { message: "Error sending email", error: error.message };
   };
 };
+
 exports.cancelBooking = async (req , res) => {
 
   const transaction = await db.sequelize.transaction();
