@@ -24,6 +24,5 @@ module.exports = (app) => {
   router.delete('/:cinemaId/deleteShowtime/:id', authMiddleware, authVendor, vendorController.deleteShowtime);
 
   router.get('/showtimes/:showTimeId/seats', authMiddleware, authVendor, vendorController.viewSeatMap);
-  router.get('/seatmap/notify/:showTimeId', authMiddleware, authVendor, vendorController.notification);
   app.use('/api/vendor', router);
 };
