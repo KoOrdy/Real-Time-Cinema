@@ -16,14 +16,18 @@ module.exports = (app) => {
   router.get('/cinemas/:cinemaId/movie/:movieId/dates', authMiddleware, authCustomer , customerController.viewMovieDates);
   router.get('/cinemas/:cinemaId/movie/:movieId/showTimes', authMiddleware, authCustomer , customerController.viewMovieShowTimes); // GET /cinemas/:cinemaId/movie/:movieId/showTimes?date=2024-12-15
 
-
   router.get('/showTimeId/:showTimeId/seats', authMiddleware, authCustomer , customerController.viewSeatsMap);
 
   router.get('/myBookings', authMiddleware, authCustomer , customerController.viewMyBookings);
 
-  // router.post('/bookings' , authMiddleware, customerController.bookSeats);
-
   router.patch('/updateInfo', authMiddleware, authCustomer , customerController.updateInfo);
+
+  router.post('/bookSeat' , authMiddleware, customerController.bookSeat);
+  // router.post('/myBookings/:bookingId/cancelBooking' , authMiddleware, customerController.cancelBooking);
+
+  // router.get('/notification', authMiddleware, authCustomer , customerController.sendNotification);
+
+
 
 
 
