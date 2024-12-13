@@ -103,6 +103,13 @@ exports.viewMovieDetails = async (req, res) => {
         id: movieId,
         cinemaId: cinemaId
       },
+      include: [
+        {
+          model: Showtimes,
+          as: 'Showtimes',
+          attributes: ['date']
+        }
+      ]
     });
     if(!movie){
       return res.status(404).json({ message: "No movie found for this cinema." });
@@ -382,16 +389,11 @@ exports.bookSeat = async (req , res) => {
   const transaction = await db.sequelize.transaction();
 
   const customerId = req.user.id;
-  const { cinemaId , hallId , movieId , showtimeId , seatIds } = req.body;
+  const { cinemaId , hallId , movieId , showtimeId , seatIds , totalPrice} = req.body;
 
-  if (!cinemaId || !hallId || !movieId || !showtimeId || !Array.isArray(seatIds) || !seatIds.length) {
+  if (!cinemaId || !hallId || !movieId || !showtimeId || !totalPrice || !Array.isArray(seatIds) || !seatIds.length) {
     return res.status(400).json({ message: "All fields are required, and seat IDs must be provided!" });
   }   
-
-  const validSeatIds = Array.isArray(seatIds) ? seatIds : [];
-  if (!validSeatIds.length) {
-    return res.status(400).json({ message: "You must specify at least one seat to book." });
-  }
 
   try{ 
 
@@ -423,47 +425,52 @@ exports.bookSeat = async (req , res) => {
         hallId,
         movieId,
         showtimeId,
+        totalPrice,
         bookingStatus: "confirmed",
         bookingDate: new Date(),
       },
       { transaction },
     );
 
-    const bookedSeats = validSeatIds.map((seatId) => ({
+    const bookedSeats = seatIds.map((seatId) => ({
       bookingId: newBooking.id,
       seatId,
     }));
+    await BookingSeats.bulkCreate(bookedSeats, { transaction });
 
-    await BookingSeats.bulkCreate(bookedSeats , { transaction });
-
-    await transaction.commit();
-
+    
     const customerEmail = await Users.findOne({ 
       where: { id: req.user.id },
       attributes: ['email'],
     });
-
+    
     const customerInfo = {
       id: req.user.id,
       name: req.user.username,
       email: customerEmail.email,
     };
-
-    await sendNotification( {customer: customerInfo, bookingId: newBooking.id} );
+    
+    try {
+      await sendNotification({ customer: customerInfo, bookingId: newBooking.id });
+    } catch (notificationError) {
+      console.error("Notification failed:", notificationError.message);
+      await transaction.rollback();
+      return res.status(500).json({ message: "Booking failed at notification stage.", error: notificationError.message });
+    }
+    await transaction.commit();
 
     return res.status(201).json({ message: "Booking created successfully." });
 
   }catch (error) {
     console.error(error);
-
     if (transaction) await transaction.rollback();
-
     return res.status(500).json({ message: "Error booking seat", error: error.message });
   };
 };
-
 const getData = async ({ bookingId }) => {
   try {
+    console.log(`Fetching data for bookingId: ${bookingId}`);
+
     const data = await Bookings.findOne({
       where: { id: bookingId },
       include: [
@@ -495,13 +502,14 @@ const getData = async ({ bookingId }) => {
               model: Seats,
               as: 'seat',
               attributes: ['seatNum'],
-            },
+            }
           ],
         },
       ],
     });
 
     if (!data) {
+      console.log(`No booking found for ID: ${bookingId}`);
       return { message: "No data found" };
     }
 
@@ -509,34 +517,37 @@ const getData = async ({ bookingId }) => {
       message: "Data fetched successfully.",
       data: {
         bookingNumber: bookingId,
-        cinemaName: data.cinema.name,
-        hallName: data.hall.name,
-        movieName: data.movie.title,
-        movieDate: data.showtime.date,
-        showStartTime: data.showtime.startTime,
-        showEndTime: data.showtime.endTime,
-        status: data.bookingStatus,
-        seats: data.bookingSeats.map((seat) => seat.seat.seatNum),
+        cinemaName: data.cinema?.name || 'N/A',
+        hallName: data.hall?.name || 'N/A',
+        movieName: data.movie?.title || 'N/A',
+        movieDate: data.showtime?.date || 'N/A',
+        showStartTime: data.showtime?.startTime || 'N/A',
+        showEndTime: data.showtime?.endTime || 'N/A',
+        status: data.bookingStatus || 'N/A',
+        seats: data.bookingSeats?.map((seat) => seat.seat?.seatNum) || [],
+        totalPrice: data.totalPrice || 0,
       },
     };
 
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching data:', error.message);
     return { message: "Error fetching data.", error: error.message };
   }
 };
 
 const sendNotification = async ({ customer , bookingId }) => {
   try{
-    const { data } = await getData({ bookingId });
-    if (!data) {
+    const result = await getData({ bookingId });
+    if (!result.data) {
       throw new Error("Booking data not found");
     }
+
+    const data = result.data;
     
     await Notifications.create({
       userId: customer.id,           
       type: 'email',                 
-      message: `Booking Number: ${data.bookingNumber} confirmed at ${data.cinemaName} for movie ${data.movieName}. Details: Date: ${data.movieDate}, Time: ${data.showStartTime} - ${data.showEndTime}, Seats: ${data.seats.join(', ')}`
+      message: `Booking Number: ${data.bookingNumber} confirmed at ${data.cinemaName} for movie ${data.movieName}. Details: Date: ${data.movieDate}, Time: ${data.showStartTime} - ${data.showEndTime}, Seats: ${data.seats.join(', ')}, Total Price: ${data.totalPrice}`
     });
 
     const mailOptions = {
@@ -565,6 +576,7 @@ const sendNotification = async ({ customer , bookingId }) => {
                           <p style="margin: 5px 0;"><strong>Start Time:</strong> ${data.showStartTime}</p>
                           <p style="margin: 5px 0;"><strong>End Time:</strong> ${data.showEndTime}</p>
                           <p style="margin: 5px 0;"><strong>Seats:</strong> ${data.seats.join(', ')}</p>
+                          <p style="margin: 5px 0;"><strong>Total Price:</strong> ${data.totalPrice}</p>
                       </div>
                       <p style="margin: 20px 0 0;">We look forward to seeing you at the cinema. Thank you for choosing us!</p>
                   </div>
@@ -586,9 +598,38 @@ const sendNotification = async ({ customer , bookingId }) => {
   };
 };
 
-// exports.cancelBooking = async (req.res) => {
+exports.cancelBooking = async (req , res) => {
 
-// };
+  const transaction = await db.sequelize.transaction();
+
+  try{
+    const { bookingId } = req.params;
+    const booking = await Bookings.findOne({ where: { id: bookingId } });
+    if(!booking){
+      return res.status(404).json({ message: "No booking for this ID." });
+    }
+
+    await Bookings.update({ bookingStatus: "cancelled"} , {where : { id: bookingId } , transaction});
+
+    const bookingSeats = await BookingSeats.findAll({
+      where: { bookingId },
+      attributes: ['seatId'],
+      raw: true,
+    });
+
+    const seatIds = bookingSeats.map(seat => seat.seatId);
+
+    await Seats.update( { status: "available" } , { where: { id: seatIds } , transaction} );
+
+    await transaction.commit();
+
+    return res.status(200).json({ message: "Booking cancelled successfully" });
+  }catch (error) {
+    console.error(error);
+    if (transaction) await transaction.rollback();
+    return res.status(500).json({ message: "Error cancelling booking", error: error.message });
+  };
+};
 
 
 // exports.cancelBooking = async (req, res) => {

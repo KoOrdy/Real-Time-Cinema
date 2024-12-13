@@ -22,8 +22,8 @@ module.exports = (app) => {
 
   router.patch('/updateInfo', authMiddleware, authCustomer , customerController.updateInfo);
 
-  router.post('/bookSeat' , authMiddleware, customerController.bookSeat);
-  // router.post('/myBookings/:bookingId/cancelBooking' , authMiddleware, customerController.cancelBooking);
+  router.post('/bookSeat' , authMiddleware, authCustomer , customerController.bookSeat);
+  router.patch('/bookingId/:bookingId/cancelBooking' , authMiddleware, authCustomer , customerController.cancelBooking);
 
   // router.get('/notification', authMiddleware, authCustomer , customerController.sendNotification);
 
