@@ -35,7 +35,7 @@ const MapPag = () => {
         const formattedLocations = cinemas.map((cinema) => ({
           latitude: parseFloat(cinema.location.latitude),
           longitude: parseFloat(cinema.location.longitude),
-          cinemaLink: "/", // Modify this as needed
+          cinemaLink: `/lastadded/${cinema.id}`, 
           cinemaId: cinema.id,
         }));
 

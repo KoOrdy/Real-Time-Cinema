@@ -2,63 +2,73 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./movies.css";
 import Navbar from "./navbar";
+import { useParams } from "react-router-dom";
+import axiosInstance from "../config/axiosInstance";
 
 const Lastadded = () => {
+  const[filter,setfilter]=useState(false);
+  const { id } = useParams();
   const [movies, setMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedShowtime, setSelectedShowtime] = useState("");
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const bookedSeats = [5, 12, 18]; // Example booked seats
 
-  const bookedSeats = [5, 12, 18]; 
-
-  
   useEffect(() => {
-    const cinemaId = localStorage.getItem("cinemaId");
-    if (!cinemaId) {
-      console.error("Cinema ID not found in localStorage.");
-      alert("Cinema ID not found. Please set it in localStorage.");
-      return;
-    }
-
-    axios
-      .get(`/lastAddedMovies/${cinemaId}`)
-      .then((response) => {
-        setMovies(response.data); 
-      })
-      .catch((error) => {
+    const fetchMovies = async () => {
+      console.log(filter);
+      try {
+        const url = filter 
+          ? `/customer/movies/${id}` 
+          : `/customer/lastAddedMovies/${id}`;
+        
+        const response = await axiosInstance.get(url);
+        console.log("Movies fetched:", response.data);
+        
+        if (response.data && response.data.data) {
+          setMovies(response.data.data); 
+        } else {
+          console.error("Unexpected response format:", response.data);
+          alert("Failed to fetch movies. Please try again later.");
+        }
+      } catch (error) {
         console.error("Error fetching movies:", error);
         alert("Failed to fetch movies. Please try again later.");
-      });
-  }, []);
+      }
+    };
+  
+    fetchMovies();
+  }, [filter, id]); 
 
   const handleSelectMovie = (movie) => {
-    // Retrieve cinemaId from localStorage
-    const cinemaId = localStorage.getItem("cinemaId");
-  
+    const cinemaId = localStorage.getItem("selectedCinemaId");
+
     if (!cinemaId) {
-      console.error("Cinema ID not found in localStorage.");
-      alert("Cinema ID is not set. Please set it in localStorage.");
-      return;
+        console.error("Cinema ID not found in localStorage.");
+        alert("Cinema ID is not set. Please set it in localStorage.");
+        return;
     }
+
+    const url = `/customer/cinemas/${cinemaId}/movie/${movie.id}`;
+    console.log("Fetching URL:", url);
   
-    // Construct the URL with cinemaId and movieId
-    const url = `/cinemas/${cinemaId}/movie/${movie.id}`;
+    axiosInstance
+        .get(url)
+        .then((response) => {
+            console.log("Backend Response:", response.data);
+            setSelectedMovie(response.data.data); 
+            setSelectedDate("");
+            setSelectedShowtime("");
+            setSelectedSeats([]);
+        })
+        .catch((error) => {
+            console.error("Error fetching movie details:", error);
+            alert("Failed to fetch movie details. Please try again later.");
+        });
+};
+
   
-    // Fetch movie details from the backend
-    axios
-      .get(url)
-      .then((response) => {
-        setSelectedMovie(response.data); // Set the movie details from the response
-        setSelectedDate(""); // Clear any previously selected date
-        setSelectedShowtime(""); // Clear any previously selected showtime
-        setSelectedSeats([]); // Clear selected seats
-      })
-      .catch((error) => {
-        console.error("Error fetching movie details:", error);
-        alert("Failed to fetch movie details. Please try again later.");
-      });
-  };
 
   const handleSelectDate = (e) => {
     setSelectedDate(e.target.value);
@@ -97,19 +107,19 @@ const Lastadded = () => {
       return;
     }
 
-    // If everything is selected correctly, show a success message
     alert(`Successfully booked seats: ${selectedSeats.join(", ")} for ${selectedMovie.title} on ${selectedDate} at ${selectedShowtime}`);
-    setSelectedSeats([]); // Reset seat selection after booking
+    setSelectedSeats([]); 
   };
 
   return (
     <div className="movies-page">
       <h1>Last Added Movies</h1>
-
+      <button type="button" onClick={() => setfilter(true)}>Show All Movies</button>
+      <button type="button" onClick={() => setfilter(false)}>Show Last Added Movies</button>
       {/* Movie List */}
       {!selectedMovie ? (
         <div className="movies-list">
-          {movies.map((movie) => (
+          {movies?.map((movie) => (
             <div
               key={movie.id}
               className="movie-card"
@@ -188,4 +198,5 @@ const Lastadded = () => {
 };
 
 export default Lastadded;
+
 
