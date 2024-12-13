@@ -22,5 +22,8 @@ module.exports = (app) => {
   router.put('/:cinemaId/updateShowtime/:id', authMiddleware, authVendor, vendorController.updateShowTime); //cinemaID(1)/updateShowtime/id's showtime(1) <-
   router.get('/:cinemaId/halls/:hallId', authMiddleware, authVendor, vendorController.listHallShowtimes);
   router.delete('/:cinemaId/deleteShowtime/:id', authMiddleware, authVendor, vendorController.deleteShowtime);
+
+  router.get('/showtimes/:showTimeId/seats', authMiddleware, authVendor, vendorController.viewSeatMap);
+  router.get('/seatmap/notify/:showTimeId', authMiddleware, authVendor, vendorController.notification);
   app.use('/api/vendor', router);
 };

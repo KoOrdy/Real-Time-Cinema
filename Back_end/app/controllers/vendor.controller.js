@@ -1,4 +1,4 @@
-const { Movies, Cinemas, Showtimes, Halls, Notifications ,Bookings ,Users, Seats} = require('../models');
+const { Movies, Cinemas, Showtimes, Halls, Notifications ,Bookings ,Users, Seats, BookingSeats} = require('../models');
 const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
@@ -688,44 +688,39 @@ exports.listHallShowtimes = async (req, res) => {
     const { cinemaId, hallId } = req.params;
 
     try {
-        // Fetch the hall, ensuring it matches both the hallId and cinemaId
         const hall = await Halls.findOne({
-            where: { id: hallId, cinemaId }, // Ensure cinemaId and hallId match
+            where: { id: hallId, cinemaId },
             include: {
                 model: Cinemas,
                 as: 'cinema',
-                where: { vendorId: req.user.id }, // Ensure vendor owns the cinema
-                attributes: ['id'], // Fetch only necessary data
+                where: { vendorId: req.user.id },
+                attributes: ['id'],
             },
         });
 
-        // If no hall is found, return an error
         if (!hall) {
             return res.status(404).json({
                 message: "Hall not found or does not belong to the specified cinema.",
             });
         }
 
-        // Fetch the showtimes for the hall
         const showtimes = await Showtimes.findAll({
             where: { hallId },
             attributes: ['date', 'startTime', 'endTime'],
             include: {
                 model: Movies,
                 as: 'movie',
-                attributes: ['title'], // Fetch movie title only
+                attributes: ['title'],
             },
             order: [['date', 'ASC'], ['startTime', 'ASC']],
         });
 
-        // If no showtimes are found, return an appropriate message
         if (!showtimes || showtimes.length === 0) {
             return res.status(404).json({
                 message: "No showtimes found for this hall.",
             });
         }
 
-        // Return the showtimes data
         res.status(200).json({
             message: "Showtimes retrieved successfully!",
             data: showtimes.map(showtime => ({
@@ -774,5 +769,121 @@ exports.deleteShowtime = async (req, res) => {
 
 }
 
-// //-----------------------------------seat map--------------------------------------------------------\\
-// //-----------------------------------Notification Management--------------------------------------------------------\\
+//-----------------------------------seat map--------------------------------------------------------\\
+exports.viewSeatMap = async (req, res) => {
+  try {
+    const { showTimeId } = req.params;
+
+    if (!showTimeId || isNaN(showTimeId)) {
+      return res.status(400).json({ message: "Invalid show time ID." });
+    }
+    
+    const showtime = await Showtimes.findOne({
+      where: { id: showTimeId },
+      attributes: ['hallId'],
+    });
+
+    if (!showtime) {
+      return res.status(404).json({ message: "Show Time not found." });
+    }
+
+    const { hallId } = showtime;
+
+    const seats = await Seats.findAll({
+      where: { hallId },
+      attributes: ['id', 'seatNum'],
+      include: {
+        model: BookingSeats,
+        as: 'bookingSeats',
+        include: {
+          model: Bookings, 
+          as: 'booking',
+          where: { showtimeId: showTimeId },
+          required: false,
+          attributes: [], 
+        },
+      },
+    });
+
+    if (!seats.length) {
+      return res.status(404).json({ message: "No seats found for this show time." });
+    }
+
+    const seatMap = seats.map(seat => ({
+      seatID: seat.id,
+      seatName: seat.seatNum,
+      seatStatus: seat.bookingSeats && seat.bookingSeats.length > 0 ? 'booked' : 'available',
+    }));
+
+    return res.status(200).json({
+      message: "Seat map retrieved successfully.",
+      data: seatMap,
+    });
+  } catch (error) {
+    console.error("Error fetching seat map:", error);
+    return res.status(500).json({ message: "Error fetching seat map.", data: error.message });
+  }
+};
+
+//-----------------------------------Notification Management--------------------------------------------------------\\
+
+exports.notification = async (req, res) => {
+  try {
+    const { showTimeId } = req.params;
+
+    if (!showTimeId || isNaN(showTimeId)) {
+      return res.status(400).json({ message: "Invalid show time ID." });
+    }
+
+    const showtime = await Showtimes.findOne({
+      where: { id: showTimeId },
+      attributes: ['hallId'],
+    });
+
+    if (!showtime) {
+      return res.status(404).json({ message: "Show Time not found." });
+    }
+
+    const { hallId } = showtime;
+
+    const bookedSeatsCount = await BookingSeats.count({
+  include: [
+    {
+      model: Seats,
+      as: 'seat',
+      where: { hallId },
+      required: true,
+    },
+    {
+      model: Bookings,
+      as: 'booking',
+      where: { showtimeId: showTimeId },
+      required: true,
+    },
+  ],
+});
+
+
+    const availableSeatsCount = 47 - bookedSeatsCount;
+
+    const notificationMessage = `There are ${bookedSeatsCount} of ${47} seats booked in this showtime!`;
+
+    await Notifications.create({
+      userId: req.user.id,
+      type: 'in-app',
+      message: notificationMessage,
+    });
+
+    return res.status(200).json({
+      message: "Notification sent successfully.",
+      data: {
+        totalSeats: 47,
+        bookedSeats: bookedSeatsCount,
+        availableSeats: availableSeatsCount,
+      },
+    });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    return res.status(500).json({ message: "Error sending notification.", data: error.message });
+  }
+};
