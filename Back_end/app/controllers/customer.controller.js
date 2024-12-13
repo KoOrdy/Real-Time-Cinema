@@ -526,7 +526,7 @@ const sendEmail = async ({ customer , bookingId }) => {
       to: customer.email,
       subject: 'Booking is Confirmed',
       html: `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: white;">
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
               <div style="max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                   <!-- Header -->
                   <div style="background-color: #4CAF50; padding: 20px; text-align: center; color: white;">
@@ -535,7 +535,7 @@ const sendEmail = async ({ customer , bookingId }) => {
                   </div>
 
                   <!-- Body -->
-                  <div style="padding: 20px; color: white;">
+                  <div style="padding: 20px;">
                       <p style="font-size: 18px; margin: 0 0 10px;">Dear <strong>${customer.name}😁</strong>,</p>
                       <p style="margin: 10px 0;">Thank you for booking with us! We are excited to confirm your booking. Here are your booking details:</p>
                       <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #4CAF50; border-radius: 5px; margin: 10px 0; color: white;">
@@ -554,7 +554,7 @@ const sendEmail = async ({ customer , bookingId }) => {
 
                   <!-- Footer -->
                   <div style="background-color: #f7f7f7; padding: 10px; text-align: center; border-top: 1px solid #ddd;">
-                      <p style="font-size: 14px; margin: 0; color: white;">❤ Regards, <br> Your Cinema Team</p>
+                      <p style="font-size: 14px; margin: 0; color: #555;">❤ Regards, <br> Your Cinema Team</p>
                   </div>
               </div>
           </div>
