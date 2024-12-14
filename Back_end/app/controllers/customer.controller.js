@@ -6,7 +6,6 @@ const config = require('../config/auth.config');
 const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email.config');
-const { where } = require("sequelize");
 const transporter = nodemailer.createTransport(emailConfig);
 
 
@@ -432,46 +431,40 @@ exports.bookSeat = async (req , res) => {
   const transaction = await db.sequelize.transaction();
 
   const customerId = req.user.id;
-  const { cinemaId , movieId , showtimeId , seatIds } = req.body;
+  const { cinemaId , movieId , showtimeId , seatIds , totalPrice} = req.body;
 
-  if (!cinemaId || !movieId || !showtimeId || !Array.isArray(seatIds) || !seatIds.length) {
+  if (!cinemaId || !movieId || !showtimeId || !totalPrice || !Array.isArray(seatIds) || !seatIds.length) {
     return res.status(400).json({ message: "All fields are required, and seat IDs must be provided!" });
   }   
 
   try{ 
 
-    const seats = await Seats.findAll({
-      where: {
-        id: seatIds,
-        cinemaId,
-        // status: 'available', // Only available seats
-      },
-    });
+    // const seats = await Seats.findAll({
+    //   where: {
+    //     id: seatIds,
+    //     cinemaId,
+    //     status: 'available', // Only available seats
+    //   },
+    // });
       
     // if (seats.length !== seatIds.length) {
     //   return res.status(400).json({ message: "Some selected seats are invalid or already booked." });
     // }
 
-    await Seats.update(
-      { status: "booked" },
-      {
-        where: { id: seatIds },
-        transaction,
-      }
-    );
+    // await Seats.update(
+    //   { status: "booked" },
+    //   {
+    //     where: { id: seatIds },
+    //     transaction,
+    //   }
+    // );
+    
     const showtime = await Showtimes.findOne({
       where: { id: showtimeId },
       attributes: ['hallId'],
     })
 
     const hallId = showtime.hallId;
-
-    const moviePrice = await Movies.findOne({
-      where: { id: movieId },
-      attributes: ['price'],
-    });
-
-    const totalPrice = moviePrice.price * seatIds.length;
 
     const newBooking = await Bookings.create(
       {
