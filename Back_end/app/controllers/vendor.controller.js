@@ -452,20 +452,19 @@ exports.viewAvailableMovies = async (req, res) => {
 // //-----------------------------------Showtime Management--------------------------------------------------------\\
 
 //-----------------add showtime----------------------//
-
 exports.addShowtime = async (req, res) => {
-    const { date, startTime, endTime, hallId, movieId } = req.body;
-    const { cinemaId } = req.params; 
+    const { date, startTime, endTime, movieId } = req.body;
+    const { cinemaId, hallId } = req.params;
 
-    if (!date || !startTime || !endTime || !hallId || !movieId) {
+    if (!date || !startTime || !endTime || !movieId) {
         return res.status(400).send({ 
-            message: "All required fields (date, startTime, endTime, hallId, movieId, ) must be provided!" 
+            message: "All required fields (date, startTime, endTime, movieId) must be provided!" 
         });
     }
 
     const start = new Date(`${date}T${startTime}`);
     const end = new Date(`${date}T${endTime}`);
-    const today = new Date(); 
+    const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     if (start < today) {
@@ -483,7 +482,7 @@ exports.addShowtime = async (req, res) => {
         const cinema = await Cinemas.findOne({
             where: {
                 id: cinemaId,
-                vendorId: req.user.id, 
+                vendorId: req.user.id,
             },
         });
 
@@ -496,13 +495,26 @@ exports.addShowtime = async (req, res) => {
         const hall = await Halls.findOne({
             where: {
                 id: hallId,
-                cinemaId, 
+                cinemaId,
             },
         });
 
         if (!hall) {
             return res.status(400).send({ 
                 message: "The specified hall does not belong to this cinema!" 
+            });
+        }
+
+        const movie = await Movies.findOne({
+            where: {
+                id: movieId,
+                cinemaId,
+            },
+        });
+
+        if (!movie) {
+            return res.status(400).send({ 
+                message: "The selected movie does not belong to this cinema!" 
             });
         }
 
@@ -539,16 +551,16 @@ exports.addShowtime = async (req, res) => {
             endTime,
             hallId,
             movieId,
-            cinemaId : cinemaId,
+            cinemaId,
             vendorId: req.user.id,
         });
 
         res.status(201).send({ message: "Showtime added successfully!", showtime });
     } catch (error) {
+        console.error("Error adding showtime:", error);
         res.status(500).send({ message: "Error: " + error.message });
     }
 };
-
 //-----------------update showtime----------------------//
 
 exports.updateShowTime = async (req, res) => {

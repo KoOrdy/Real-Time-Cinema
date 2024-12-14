@@ -18,7 +18,7 @@ module.exports = (app) => {
   router.delete('/:cinemaId/deletemovies/:movieId', authMiddleware, authVendor, vendorController.deleteMovie);
   router.get('/:cinemaId/movies', authMiddleware, authVendor, vendorController.viewAvailableMovies);
 
-  router.post('/:cinemaId/addShowtime', authMiddleware, authVendor, vendorController.addShowtime); //cinemaID(1)/addShowtime <- 
+  router.post('/:cinemaId/:hallId/addShowtime', authMiddleware, authVendor, vendorController.addShowtime);
   router.put('/:cinemaId/updateShowtime/:id', authMiddleware, authVendor, vendorController.updateShowTime); //cinemaID(1)/updateShowtime/id's showtime(1) <-
   router.get('/:cinemaId/halls/:hallId', authMiddleware, authVendor, vendorController.listHallShowtimes);
   router.delete('/:cinemaId/deleteShowtime/:id', authMiddleware, authVendor, vendorController.deleteShowtime);

@@ -364,7 +364,6 @@ exports.viewMyBookings = async (req , res) => {
         endShowTime: booking.showtime.endTime,
         status: booking.bookingStatus,
         seats: booking.bookingSeats.map((seat) => seat.seat.seatNum),
-        totalPrice: booking.totalPrice,
       })),
     });
 
