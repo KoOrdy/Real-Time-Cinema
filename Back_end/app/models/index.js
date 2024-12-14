@@ -37,4 +37,4 @@ db.Sequelize = Sequelize;
 
 module.exports = db;
 
-console.log(Object.keys(db)); // سيعرض جميع الموديلات المحملة، تأكد من أن `User` موجود
+console.log(Object.keys(db));

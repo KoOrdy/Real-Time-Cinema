@@ -1,4 +1,4 @@
-const { Movies, Cinemas, Showtimes, Halls, Notifications ,Bookings ,Users, Seats, BookingSeats} = require('../models');
+const { Movies, Cinemas, Showtimes, Halls ,Bookings ,Users, Seats, BookingSeats} = require('../models');
 const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
@@ -6,7 +6,6 @@ const emailConfig = require('../config/email.config');
 const transporter = nodemailer.createTransport(emailConfig);
 
 //-----------------------------------Cinema Management--------------------------------------------------------\\
-
 //-----------------add cinema----------------------//
 
 exports.addCinema = async (req, res) => {
@@ -41,7 +40,8 @@ exports.addCinema = async (req, res) => {
             vendorId: req.user.id,
         });
 
-        // await redisClient.del(`cinemas for ${vendorId} `);
+        await redisClient.del(`cinemas:vendor:${req.user.id}`);
+
         res.status(201).send({ message: "Cinema added successfully!", cinema });
     } catch (error) {
         res.status(500).send({ message: "Error: " + error.message });
@@ -86,7 +86,7 @@ exports.updateCinema = async (req, res) => {
         if (contactInfo) updatedData.contactInfo = contactInfo;
 
         await cinema.update(updatedData);
-        // await redisClient.del(`cinemas for ${vendorId} `);
+        await redisClient.del(`cinemas:vendor:${req.user.id}`);
 
         res.status(200).send({ message: "Cinema updated successfully!", cinema });
 
@@ -110,7 +110,7 @@ exports.deleteCinema = async (req, res) => {
             });
         }
 
-        // await redisClient.del(`cinemas for ${vendorId} `);
+        await redisClient.del(`cinemas:vendor:${req.user.id}`);
         await cinema.destroy();
 
         res.status(200).send({ message: "Cinema deleted successfully!" });
@@ -121,26 +121,28 @@ exports.deleteCinema = async (req, res) => {
 
 //-----------------list cinemas----------------------//
 exports.listVendorCinemas = async (req, res) => {
+    const vendorId = req.user.id;
+    const cacheKey = `cinemas:vendor:${vendorId}`;
+
     try {
-
-        const vendorId = req.user.id;
-        // const cachedCinemas = await getAsync(`cinemas for ${vendorId} `);
-
-        // if (cachedCinemas) {
-        //   return res.send(JSON.parse(cachedCinemas)); 
-        // }
-        
-        const cinemas = await Cinemas.findAll({
-            where: { vendorId },
-            attributes: ["id" , "name", "location", "contactInfo"],
-        });
-
-        if (!cinemas || cinemas.length === 0) {
-            return res.status(404).json({
-                message: "No cinemas found for this vendor.",
+        const cachedCinemas = await getAsync(cacheKey);
+        if (cachedCinemas) {
+            return res.status(200).json({
+                message: "Cinemas fetched successfully (from cache).",
+                data: JSON.parse(cachedCinemas),
             });
         }
-        // setexAsync(`cinemas for ${vendorId} `, 300, JSON.stringify(cinemas)); 
+
+        const cinemas = await Cinemas.findAll({
+            where: { vendorId },
+            attributes: ["id", "name", "location", "contactInfo"],
+        });
+
+        if (!cinemas.length) {
+            return res.status(404).json({ message: "No cinemas found for this vendor." });
+        }
+
+        await setexAsync(cacheKey, 300, JSON.stringify(cinemas));
 
         return res.status(200).json({
             message: "Cinemas fetched successfully.",
@@ -148,10 +150,7 @@ exports.listVendorCinemas = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching cinemas:", error);
-        return res.status(500).json({
-            message: "Error fetching cinemas.",
-            error: error.message,
-        });
+        return res.status(500).json({ message: "Error fetching cinemas.", error: error.message });
     }
 };
 
@@ -219,6 +218,7 @@ exports.addHall = async (req, res) => {
         }
 
         await Seats.bulkCreate(seats);
+        await redisClient.del(`halls:cinema:${cinemaId}`);
 
         res.status(201).send({
             message: "Hall and seats added successfully!",
@@ -237,8 +237,17 @@ exports.addHall = async (req, res) => {
 //-----------------list halls ----------------------//
 
 exports.listCinemaHalls = async (req, res) => {
+    const { cinemaId } = req.params;
+    const cacheKey = `halls:cinema:${cinemaId}`;
+
     try {
-        const { cinemaId } = req.params;
+        const cachedHalls = await getAsync(cacheKey);
+        if (cachedHalls) {
+            return res.status(200).json({
+                message: "Halls retrieved successfully (from cache).",
+                data: JSON.parse(cachedHalls),
+            });
+        }
 
         if (!cinemaId) {
             return res.status(400).json({ message: "Cinema ID is required!" });
@@ -261,6 +270,8 @@ exports.listCinemaHalls = async (req, res) => {
             return res.status(404).json({ message: "No halls found for this cinema." });
         }
 
+        await setexAsync(cacheKey, 300, JSON.stringify(halls));
+
         res.status(200).json({ 
             message: "Halls retrieved successfully!",
             data: halls 
@@ -272,7 +283,7 @@ exports.listCinemaHalls = async (req, res) => {
 };
 
 //-----------------------------------movie Management--------------------------------------------------------\\
-
+ 
 //-----------------add movie----------------------//
 
 exports.addMovie = async (req, res) => {
@@ -321,7 +332,7 @@ exports.addMovie = async (req, res) => {
             genre,
             duration,
             price: price,
-            poster: poster || null,
+            poster: poster,
             vendorId: req.user.id,
             cinemaId : cinemaId,
         });
@@ -372,7 +383,7 @@ exports.updateMovie = async (req, res) => {
         if (genre) updatedFields.genre = genre;
         if (duration) updatedFields.duration = duration;
         if (price) updatedFields.price = price;
-        if (poster !== undefined) updatedFields.poster = poster || null;
+        if (poster !== undefined) updatedFields.poster = poster;
 
         await movie.update(updatedFields);
 
