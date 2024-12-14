@@ -6,7 +6,6 @@ const config = require('../config/auth.config');
 const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email.config');
-const { where } = require("sequelize");
 const transporter = nodemailer.createTransport(emailConfig);
 
 
@@ -214,6 +213,21 @@ exports.viewSeatsMap = async (req, res) => {
       return res.status(404).json({ message: "No seats found for this show time." });
     }
 
+    const bookedSeats = await Bookings.findAll({
+      where: { 
+        showtimeId : showTimeId,
+        bookingStatus: 'confirmed',
+      },
+      include: [
+        {
+          model: BookingSeats,
+          as: 'bookingSeats',
+          attributes: ['seatId']
+        }
+      ],
+      attributes: []
+    })
+
     return res.status(200).json({
       message: "Seats fetched successfully.",
       data: seats.map(seat => ({
@@ -221,6 +235,7 @@ exports.viewSeatsMap = async (req, res) => {
         seatName: seat.seatNum,
         seatStatus: seat.status,
       })),
+      bookedSeats: bookedSeats
     });
 
   } catch (error) {
