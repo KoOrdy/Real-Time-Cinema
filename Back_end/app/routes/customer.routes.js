@@ -20,6 +20,7 @@ module.exports = (app) => {
 
   router.get('/myBookings', authMiddleware, authCustomer , customerController.viewMyBookings);
 
+  router.get('/userInfo', authMiddleware, authCustomer , customerController.viewUserInfo);
   router.patch('/updateInfo', authMiddleware, authCustomer , customerController.updateInfo);
 
   router.post('/bookSeat' , authMiddleware, authCustomer , customerController.bookSeat);
@@ -27,3 +28,4 @@ module.exports = (app) => {
 
   app.use('/api/customer', router);
 };
+
