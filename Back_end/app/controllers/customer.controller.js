@@ -6,6 +6,7 @@ const config = require('../config/auth.config');
 const {redisClient, getAsync, setexAsync } = require("../redis/redisClient");
 const nodemailer = require('nodemailer');
 const emailConfig = require('../config/email.config');
+const { where } = require("sequelize");
 const transporter = nodemailer.createTransport(emailConfig);
 
 
@@ -354,6 +355,23 @@ exports.viewMyBookings = async (req , res) => {
   }catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Error view bookings.", error: error.message });
+  };
+};
+
+exports.viewUserInfo = async (req , res) => {
+  try{
+    const customerId = req.user.id;
+    const customerInfo = await Users.findOne({
+      where: { id : customerId },
+      attributes: ['username' , 'email' , 'phone'],
+    })
+    if(!customerInfo){
+      return res.status(404).json({ message: "User not found." });
+    }
+    return res.status(200).json({ message: "User information fetched successfully." , data: customerInfo});
+  }catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error returning user information.", error: error.message });
   };
 };
 
