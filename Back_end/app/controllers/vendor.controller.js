@@ -793,6 +793,7 @@ exports.deleteShowtime = async (req, res) => {
 }
 
 //-----------------------------------seat map--------------------------------------------------------\\
+
 exports.viewSeatMap = async (req, res) => {
   try {
     const { showTimeId } = req.params;
@@ -800,14 +801,14 @@ exports.viewSeatMap = async (req, res) => {
     if (!showTimeId || isNaN(showTimeId)) {
       return res.status(400).json({ message: "Invalid show time ID." });
     }
-    
+
     const showtime = await Showtimes.findOne({
       where: { id: showTimeId },
       attributes: ['hallId'],
     });
 
     if (!showtime) {
-      return res.status(404).json({ message: "Show Time not found." });
+      return res.status(404).json({ message: "Show Time not found" });
     }
 
     const { hallId } = showtime;
@@ -815,35 +816,48 @@ exports.viewSeatMap = async (req, res) => {
     const seats = await Seats.findAll({
       where: { hallId },
       attributes: ['id', 'seatNum'],
-      include: {
-        model: BookingSeats,
-        as: 'bookingSeats',
-        include: {
-          model: Bookings, 
-          as: 'booking',
-          where: { showtimeId: showTimeId },
-          required: false,
-          attributes: [], 
-        },
-      },
     });
 
     if (!seats.length) {
       return res.status(404).json({ message: "No seats found for this show time." });
     }
 
-    const seatMap = seats.map(seat => ({
-      seatID: seat.id,
-      seatName: seat.seatNum,
-      seatStatus: seat.bookingSeats && seat.bookingSeats.length > 0 ? 'booked' : 'available',
-    }));
+    const bookedSeats = await Bookings.findAll({
+      where: {
+        showtimeId: showTimeId,
+        bookingStatus: 'confirmed',
+      },
+      include: [
+        {
+          model: BookingSeats,
+          as: 'bookingSeats',
+          attributes: ['seatId']
+        }
+      ],
+      attributes: []
+    });
+
+    const bookedSeatIds = bookedSeats.map(booking => 
+      booking.bookingSeats.map(bookingSeat => bookingSeat.seatId)
+    ).flat();
+
+    const seatStatuses = seats.map(seat => {
+      const isBooked = bookedSeatIds.includes(seat.id);
+      return {
+        seatID: seat.id,
+        seatName: seat.seatNum,
+        seatStatus: isBooked ? 'booked' : 'available',
+      };
+    });
 
     return res.status(200).json({
-      message: "Seat map retrieved successfully.",
-      data: seatMap,
+      message: "Seats fetched successfully.",
+      data: seatStatuses,
+      bookedSeats: bookedSeats,
     });
+
   } catch (error) {
     console.error("Error fetching seat map:", error);
-    return res.status(500).json({ message: "Error fetching seat map.", data: error.message });
+    return res.status(500).json({ message: "Error fetching seats.", data: error.message });
   }
 };
