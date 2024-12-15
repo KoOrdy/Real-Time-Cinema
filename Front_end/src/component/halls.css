@@ -1,0 +1,274 @@
+/* General Styles */
+body {
+    background-color: #181818;
+    color: #ffffff;
+    font-family: "Roboto", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  h1 {
+    text-align: center;
+    color: #ff4d4d;
+    margin-bottom: 20px;
+  }
+  
+  /* Halls Section */
+  .halls {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Add Hall */
+  .add-hall {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .add-hall input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background: #2a2a2a;
+    color: #fff;
+  }
+  
+  .add-hall button {
+    padding: 12px 20px;
+    background-color: #ff4d4d;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .add-hall button:hover {
+    background-color: #e64545;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Halls List */
+  .halls-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .hall-card {
+    background: #333;
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  .hall-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .hall-card h2 {
+    margin: 0 0 10px;
+    color: #ff4d4d;
+  }
+  
+  .view-details-button,
+  .edit-Show-Time-button {
+    background-color: #4caf50;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .view-details-button:hover,
+  .edit-Show-Time-button:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .edit-Show-Time-button {
+    background-color: #f7a900;
+  }
+  
+  .edit-Show-Time-button:hover {
+    background-color: #f08f00;
+  }
+  
+  /* Modal */
+  /* Modal Styles */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Darker background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal Content */
+  .modal-content {
+    background: #222;
+    padding: 30px;
+    width: 70%; /* Adjust width to make it more balanced */
+    max-height: 80vh; /* Limit height */
+    overflow-y: auto; /* Allow scrolling */
+    border-radius: 12px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+    color: #fff; /* Set text color to white for contrast */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  .modal-content h3 {
+    font-size: 24px;
+    color: #ff4d4d; /* Red for titles */
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  h3 {
+    color: #ff4d4d;
+    text-align: center;
+  }
+  
+  
+  /* Movie Form */
+  form select,
+  form input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    transition: border 0.3s ease;
+  }
+  
+  form select:focus,
+  form input:focus {
+    border-color: #ff4d4d;
+    outline: none;
+  }
+  
+  .label{
+    color: white;
+  }
+  
+  /* Buttons */
+  .buttons {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .save {
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .save:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+  }
+  
+  .close {
+    background-color: #f44336;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .close:hover {
+    background-color: #e53935;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Seat Map */
+  .seat.booked {
+    background-color: gray;
+    color: white;
+  }
+  .seat.available {
+    background-color: white;
+    color: black;
+  }
+  .seat-map {
+    text-align: center;
+  }
+  
+  .seats {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+  }
+  
+  .seat {
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    text-align: center;
+    color: black;
+    cursor: pointer;
+  }
+  
+  .view-seats-button{
+    background-color: #4caf50;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 2px;
+  }
+  
+  .available:hover {
+    background-color: white;
+  }
+  
+  .back {
+    background-color: #2196f3;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .back:hover {
+    background-color: #1976d2;
+  }
+  .toast {
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+  }

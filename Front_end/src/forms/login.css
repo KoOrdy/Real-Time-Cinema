@@ -1,4 +1,3 @@
-
 body, html {
     margin: 0;
     padding: 0;
@@ -14,7 +13,7 @@ body, html {
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    background:  url('./login-2-transformed.jpeg'); 
+    background: url('./login-2-transformed.jpeg'); 
     background-size: cover; 
     background-position: center center; 
     padding: 20px;
@@ -36,7 +35,6 @@ body, html {
     color: #fff;
 }
 
-
 .login input {
     border: 2px solid #fff; 
     padding: 15px;
@@ -49,13 +47,11 @@ body, html {
     box-sizing: border-box; 
 }
 
-
 .login input:focus {
     border-color: #ff6f61; 
     background-color: rgba(255, 255, 255, 0.2); 
     outline: none;
 }
-
 
 .login-btn {
     width: 100%;
@@ -71,12 +67,15 @@ body, html {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); 
 }
 
-
 .login-btn:hover {
     background-color: #e65a50; 
     transform: translateY(-3px); 
 }
 
+.login-btn:focus {
+    outline: none;
+    box-shadow: 0 0 10px #ff6f61;
+}
 
 .login-footer {
     margin-top: 20px;
@@ -86,16 +85,45 @@ body, html {
     text-align: center; 
 }
 
-
 .login-footer a {
     color: #ff6f61; 
     text-decoration: none; 
-    transition: color 0.3s ease; 
+    font-weight: 600;
+    transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .login-footer a:hover {
     color: #e65a50; 
+    transform: translateY(-2px);
 }
 
+.login-footer a:focus {
+    outline: none;
+    color: #e65a50;
+    text-decoration: underline;
+}
 
+.reset-password-btn {
+    width: 100%;
+    background-color: transparent;  /* Transparent background */
+    color: rgb(0, 0, 0);  /* Black text color */
+    font-weight: 700;
+    font-size: 18px;
+    padding: 15px;
+    border: 2px solid #575757;  /* Border color */
+    border-radius: 8px; 
+    cursor: pointer;
+    text-align: center;
+    transition: none;  /* Remove any transition effect */
+}
+
+.reset-password-btn:hover {
+    background-color: transparent;  /* Keep the background transparent on hover */
+    color: #575757;  /* Keep text color the same or modify if needed */
+}
+
+.reset-password-btn:focus {
+    outline: none;  /* Remove focus outline */
+    border-color: #575757;  /* Keep the border color same on focus */
+}
 

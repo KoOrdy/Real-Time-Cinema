@@ -3,13 +3,14 @@ import axiosInstance from "../config/axiosInstance";
 import "./AdminPage.css";
 import { Link } from "react-router-dom";
 import useAuthenticatedQuery from "../hooks/useAuthenticatedQuery";
+import Navbara from "./adminnav";
 
 const Vendor = () => {
   const [vendors, setVendors] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newVendorUsername, setNewVendorUsername] = useState("");
   const [newVendorEmail, setNewVendorEmail] = useState("");
-  const [newVendorPassword, setNewVendorPassword] = useState(""); // Added state for password
+  const [newVendorPassword, setNewVendorPassword] = useState(""); 
   const [queryVersion, setQueryVersion] = useState(1);
   const token = localStorage.getItem("token");
   const { status, data } = useAuthenticatedQuery({
@@ -125,6 +126,7 @@ console.log(data);
   };
 
   return (
+    <> <Navbara />    
     <div className="admin-container">
       <h1>Vendor Management</h1>
 
@@ -132,13 +134,7 @@ console.log(data);
         <button className="btn" onClick={handleAddVendor}>
           Add Vendor
         </button>
-        <Link to="./viewcustomer" className="btn" onClick={handleViewCustomers}>
-          View Customers
-        </Link>
-        <button className="btn" onClick={handleViewReports}>
-          View Reports
-        </button>
-        <Link to="./updatecustomer" className="btn">Update Cinema Details</Link>
+        
       </div>
 
       <table className="admin-table">
@@ -209,7 +205,7 @@ console.log(data);
           </div>
         </div>
       )}
-    </div>
+    </div></>
   );
 };
 

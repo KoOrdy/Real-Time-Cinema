@@ -2,9 +2,10 @@
   display: flex;
   justify-content: flex-end; /* Align links to the right */
   align-items: center; /* Center items vertically */
-  background-color: black; /* Set navbar background to black */
+  background-color:rgba(30, 30, 30, 0) ; /* Set navbar background to black */
   padding: 10px 20px; /* Add padding around the navbar */
-  height: 60px; /* Set a fixed height */
+  height: 100%; /* Set a fixed height */
+  width: 100%;
 }
 
 .navbar-links {
@@ -16,13 +17,39 @@
 }
 
 .navbar-link {
+  text-decoration: none;
   color: white; /* Set link color to white */
   text-transform: uppercase; /* Make the text uppercase */
   font-weight: bold; /* Bold text */
   cursor: pointer; /* Add pointer cursor on hover */
   transition: color 0.3s; /* Smooth color transition on hover */
+  padding-top: 25px;
 }
 
 .navbar-link:hover {
   color: red; /* Highlight color on hover */
+}
+.navbar-link .btn {
+  background-color: red; /* Primary button color */
+  color: white; /* Text color */
+  text-transform: uppercase; /* Ensure text is uppercase */
+  font-weight: bold; /* Make text bold */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Slightly rounded corners */
+  padding: 10px 20px; /* Add padding for better click area */
+  cursor: pointer; /* Pointer cursor for clickable element */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover effect and interaction feedback */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add subtle shadow for depth */
+}
+
+.navbar-link .btn:hover {
+  background-color: darkred; /* Darker red on hover */
+  transform: translateY(-2px); /* Slight upward movement on hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
+}
+
+.navbar-link .btn:active {
+  background-color: crimson; /* Slightly different red for active state */
+  transform: translateY(2px); /* Simulate a button press */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reduce shadow to mimic pressing effect */
 }

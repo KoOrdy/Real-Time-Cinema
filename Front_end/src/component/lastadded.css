@@ -1,92 +1,224 @@
-/* Allow the entire page to scroll */
+Global page styling
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    overflow-y: scroll; /* Ensure vertical scrolling is enabled */
-    background-color: #121212; /* Example background */
-    color: #fff; /* Example text color */
-  }
-  
-  /* Container for the slider */
-  .lastadded-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 20px auto;
-    width: 90%; /* Responsive width */
-    max-width: 1200px; /* Max width for larger screens */
-    height: 300px;
-    overflow: hidden;
-    background-color: #222; /* Dark background for the slider */
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  /* Navigation buttons */
-  .lastadded-arrowleft,
-  .lastadded-arrowright {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 24px;
-    color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-    z-index: 100;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-  }
-  
-  .lastadded-arrowleft {
-    left: 10px;
-  }
-  
-  .lastadded-arrowright {
-    right: 10px;
-  }
-  
-  /* Movie wrapper */
-  .lastadded-wrapper {
-    display: flex;
-    gap: 10px; /* Spacing between movies */
-    width: 100%;
-    justify-content: center;
-    overflow: hidden; /* Hide extra content */
-  }
-  
-  /* Individual movie card */
-  .lastadded-item {
-    flex: 0 0 calc(33.33% - 10px); /* Show 3 movies in the slider */
-    background-color: #333;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: calc(33.33% - 10px);
-  }
-  
-  .lastadded-item-img {
-    max-width: 100%;
-    max-height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-  
-  .lastadded-item-title {
-    color: #fff;
-    font-size: 18px;
-    margin-top: 10px;
-  }
-  
-  /* Add margin for the rest of the page */
-  .section {
-    margin: 20px auto;
-    padding: 20px;
-    background-color: #444;
-    border-radius: 8px;
-    text-align: center;
-  }
-  
+  margin: 0;
+  font-family: Arial, sans-serif;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  background-color: #1c1c1e; /* Dark mode stylish background */
+  color: #f5f5f7; /* Softer white for text */
+}
+
+/* Page container */
+.movies-page {
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Filter section */
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #3c3f41, #2a2c2d);
+  color: #f5f5f7;
+  box-shadow: inset 2px 2px 5px #1a1a1d, inset -2px -2px 5px #33383b;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.filters input:focus,
+.filters select:focus {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  transform: scale(1.03);
+}
+
+/* Buttons */
+button {
+  background: linear-gradient(145deg, #9b0202, #ae0c00);
+  color: #f5f5f7;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 3px 3px 5px #1a1a1d, -3px -3px 5px #8f0101;
+  transition: all 0.3s ease;
+  margin: 10px 5px; /* Adds spacing between buttons */
+}
+
+.book-button {
+  background: linear-gradient(145deg, #239b02, #239b02);
+  color: #f5f5f7;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 3px 3px 5px #1a1a1d, -3px -3px 5px #239b02;
+  transition: all 0.3s ease;
+  margin: 10px 5px; /* Matches spacing with other buttons */
+}
+
+button:hover {
+  background: linear-gradient(145deg, #1d1d1d, #1d1d1d);
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
+  transform: scale(1.05);
+}
+
+button:active {
+  box-shadow: inset 2px 2px 4px #1a1a1d, inset -2px -2px 4px #33383b;
+  transform: scale(0.97);
+}
+
+/* Movie list container */
+.movies-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.movie-card {
+  background: linear-gradient(145deg, #292b2d, #3c3f41);
+  border-radius: 12px;
+  box-shadow: 3px 3px 6px #1a1a1d, -3px -3px 6px #33383b;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+}
+
+.movie-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 5px 5px 12px #1a1a1d, -5px -5px 12px #33383b;
+}
+
+.movie-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-bottom: 2px solid #444;
+}
+
+.movie-card h3 {
+  color: #f5f5f7;
+  font-size: 18px;
+  margin: 10px 0;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Movie details */
+.movie-details {
+  text-align: center;
+  background: linear-gradient(145deg, #222629, #1a1a1d);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px auto;
+  width: 90%;
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.6);
+}
+
+.movie-details img {
+  width: 200px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.movie-details h2 {
+  margin-top: 15px;
+  color: #ffc107;
+}
+
+.movie-details p {
+  margin: 8px 0;
+}
+
+/* Seats Container */
+.seats-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Seat layout */
+  gap: 20px; /* Adjusted gap for better spacing */
+  justify-items: center;
+  margin: 40px 0; /* Adds spacing around the seats */
+}
+
+.seat {
+  background: white;
+  color: black;
+  border: none;
+  padding: 20px; /* Increased padding for larger seat size */
+  text-align: center;
+  font-size: 18px; /* Increased font size for better visibility */
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 3px 3px 6px #1a1a1d, -3px -3px 6px #33383b;
+  transition: all 0.3s ease;
+}
+
+.seat.booked {
+  background: linear-gradient(145deg, #404040, #414141);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.seat.selected {
+  background: linear-gradient(145deg, #2e7d32, #4caf50); /* Green gradient */
+  color: white;
+}
+
+.seat:hover:not(.booked) {
+  transform: scale(1.1);
+  box-shadow: 5px 5px 12px #1a1a1d, -5px -5px 12px #33383b;
+}
+
+/* Dropdown container styling */
+.showtime-select select {
+  margin-top: 10px;
+  width: 250px;
+  padding: 10px;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(145deg, #3c3f41, #292b2d);
+  border: none;
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 4px #1a1a1d, inset -2px -2px 4px #33383b;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.showtime-select select:hover {
+  background: linear-gradient(145deg, #4a4d4f, #33383b);
+  transform: scale(1.03);
+}
+
+/* Section Spacing (Optional) */
+.buttons-container {
+  margin-bottom: 30px; /* Adds spacing between buttons and next section */
+}
+
+.seats-container {
+  margin-top: 30px; /* Adds spacing above seats */
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}

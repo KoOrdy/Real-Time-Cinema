@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "../config/axiosInstance";
 import "./AdminPage.css";
 import { Link } from "react-router-dom";
+import Navbara from "./adminnav";
 
 const Viewcustomer = () => {
   const [customers, setCustomers] = useState([]);
@@ -86,21 +87,11 @@ const Viewcustomer = () => {
   };
 
   return (
+    <><Navbara />
     <div className="admin-container">
       <h1>Admin Page</h1>
-
-      <div className="admin-operations">
-        {/* <button className="btn" onClick={handleAddCustomer}>
-          Add Customer
-        </button> */}
-        <Link to="/" className="btn" onClick={handleViewvendors}>
-          View Vendors
-        </Link>
-        <button className="btn" onClick={handleViewReports}>
-          View Reports
-        </button>
-        <button className="btn">Update Cinema Details</button>
-      </div>
+    
+    
 
       <table className="admin-table">
         <thead>
@@ -129,7 +120,7 @@ const Viewcustomer = () => {
           ))}
         </tbody>
       </table>
-    </div>
+    </div></>
   );
 };
 

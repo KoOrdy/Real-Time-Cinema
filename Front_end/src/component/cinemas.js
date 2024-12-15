@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import './cinema.css';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../config/axiosInstance";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import { toast } from "react-toastify";
 
 const mapContainerStyle = {
   width: "100%",
@@ -26,6 +27,23 @@ const Cinema = () => {
   const [newCinemaName, setNewCinemaName] = useState("");
   const [newCinemaLocation, setNewCinemaLocation] = useState({ latitude: "", longitude: "" });
   const [newCinemaContactInfo, setNewCinemaContactInfo] = useState("");
+
+  const navigate = useNavigate(); // For navigation
+  const onLogout = () => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+  
+          toast.success("You will navigate to the login page after 2 seconds.",
+            {
+              position: "bottom-center",
+              duration: 2000,
+              style: {backgroundColor: "black", color: "white", width: "fit-content",},
+            }
+          );
+          setTimeout(function() {
+              window.location.replace("/login");
+            }, 2000);
+        }
 
   useEffect(() => {
     const fetchCinemas = async () => {
@@ -105,7 +123,7 @@ const Cinema = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
-        if (response.status === 200) {
+        if (response.status === 201) {
           setCinemas(cinemas.map((cinema) => 
             cinema.id === currentCinemaId ? { ...cinema, ...newCinema } : cinema
           ));
@@ -161,6 +179,12 @@ const Cinema = () => {
     setNewCinemaLocation({ latitude: lat, longitude: lng });
   };
 
+  // Store cinema ID and navigate to halls page
+  const handleViewHalls = (cinemaId) => {
+    localStorage.setItem('cinemaId', cinemaId); // Store the cinema ID in localStorage
+    navigate(`/halls/${cinemaId}`); // Navigate to the halls page with the cinema ID
+  };
+
   return (
     <div className="vendor-container">
       <h1>Cinema Management</h1>
@@ -169,6 +193,7 @@ const Cinema = () => {
         <button className="btn" onClick={handleAddCinema}>
           Add Cinema
         </button>
+        <button className="btn" type="button" onClick={onLogout}>logout</button>
       </div>
 
       <table className="vendor-table">
@@ -196,8 +221,13 @@ const Cinema = () => {
               <td>{cinema.contactInfo}</td>
               <td>
                 <button className="btn btn-edit" onClick={() => handleEditCinema(cinema.id)}>Edit</button>
-                <Link to="/movies" className="btn btn-view">View Movies</Link>
-                <Link to="/halls" className="btn btn-viewh">View Halls</Link>
+                <Link to={`/movies/${cinema.id}`} className="btn btn-view">View Movies</Link>
+                <Link to={`${cinema.id}/halls`}
+                  className="btn btn-viewh" 
+                  onClick={() => handleViewHalls(cinema.id)} 
+                >
+                  View Halls
+                </Link>
                 <button className="btn btn-delete" onClick={() => handleDelete(cinema.id)}>Delete</button>
               </td>
             </tr>

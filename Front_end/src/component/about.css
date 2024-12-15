@@ -1,0 +1,101 @@
+/* Importing the Caveat font from Google Fonts */
+@import url('https://fonts.google.com/specimen/Oleo+Script');
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: auto; /* Prevents vertical scrolling */
+}
+
+.App {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  font-family: 'Caveat', cursive; /* Applying the Caveat font */
+  height: 100%;
+  background-color: #1d1d1d; /* Dark background */
+}
+
+.App-header {
+  background-color: #000; /* Black background */
+  padding: 20px;
+  color: #fff; /* White text */
+  width: 100%;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.about-section {
+  padding: 40px 20px;
+  background-color: #1d1d1d; /* Dark background */
+  color: #fff; /* White text */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.about-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-container h2 {
+  font-size: 2rem;
+  color: #ff0000; /* Red color */
+}
+
+.about-container p {
+  font-size: 1.2rem;
+  color: #ccc; /* Light grey text for contrast */
+  line-height: 1.6;
+}
+
+.about-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40px;
+  width: 100%;
+  flex-direction: column;
+}
+
+.about-text {
+  width: 80%;
+  text-align: left;
+  font-size: 1.3rem;
+  color: #ccc; /* Light grey text */
+  margin-bottom: 140px;
+  margin-top: -20px;
+}
+
+.about-image {
+  width: 80%;
+}
+
+.about-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .about-content {
+    flex-direction: row;
+  }
+
+  .about-text {
+    width: 48%;
+  }
+
+  .about-image {
+    width: 48%;
+  }
+}

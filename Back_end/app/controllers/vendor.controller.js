@@ -263,7 +263,7 @@ exports.listCinemaHalls = async (req, res) => {
 
         const halls = await Halls.findAll({
             where: { cinemaId },
-            attributes: ['name', 'capacity'], 
+            attributes: ['name', 'capacity' , 'id'], 
         });
 
         if (halls.length === 0) {

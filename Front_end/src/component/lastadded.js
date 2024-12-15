@@ -1,35 +1,34 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import "./movies.css";
-import Navbar from "./navbar";
-import { useParams } from "react-router-dom";
 import axiosInstance from "../config/axiosInstance";
+import moment from "moment";
+import { useParams } from "react-router-dom";
+import "./lastadded.css";
 
 const Lastadded = () => {
-  const[filter,setfilter]=useState(false);
   const { id } = useParams();
   const [movies, setMovies] = useState([]);
+  const [filteredMovies, setFilteredMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedShowtime, setSelectedShowtime] = useState("");
+  const [availableDates, setAvailableDates] = useState([]);
+  const [showtimes, setShowtimes] = useState([]);
+  const [seats, setSeats] = useState([]);
+  const [bookedSeats, setBookedSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const bookedSeats = [5, 12, 18]; // Example booked seats
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [genreFilter, setGenreFilter] = useState("");
+  const [filter, setFilter] = useState(false);
+ 
   useEffect(() => {
     const fetchMovies = async () => {
-      console.log(filter);
       try {
-        const url = filter 
-          ? `/customer/movies/${id}` 
-          : `/customer/lastAddedMovies/${id}`;
-        
+        const url = filter ? `/customer/movies/${id}` : `/customer/lastAddedMovies/${id}`;
         const response = await axiosInstance.get(url);
-        console.log("Movies fetched:", response.data);
-        
         if (response.data && response.data.data) {
-          setMovies(response.data.data); 
+          setMovies(response.data.data);
+          setFilteredMovies(response.data.data);
         } else {
-          console.error("Unexpected response format:", response.data);
           alert("Failed to fetch movies. Please try again later.");
         }
       } catch (error) {
@@ -37,98 +36,198 @@ const Lastadded = () => {
         alert("Failed to fetch movies. Please try again later.");
       }
     };
-  
+
     fetchMovies();
-  }, [filter, id]); 
+  }, [filter, id]);
+
+  const fetchSeats = async (showtimeId) => {
+    try {
+      const response = await axiosInstance.get(`customer/showTimeId/${showtimeId}/seats`);
+      if (response.data && response.data.data) {
+        const seatsData = response.data.data;
+        console.log("Seat fetch response:", response.data);
+        setSeats(seatsData);
+        setBookedSeats(seatsData.filter((seat) => seat.seatStatus === "booked").map((seat) => seat.seatID));
+        setSelectedSeats([]);
+      } else {
+        setSeats([]);
+        setBookedSeats([]);
+      }
+    } catch (error) {
+      console.error("Error fetching seats:", error);
+      alert("Failed to fetch seats. Please try again later.");
+      setSeats([]);
+      setBookedSeats([]);
+    }
+  };
 
   const handleSelectMovie = (movie) => {
     const cinemaId = localStorage.getItem("selectedCinemaId");
 
     if (!cinemaId) {
-        console.error("Cinema ID not found in localStorage.");
-        alert("Cinema ID is not set. Please set it in localStorage.");
-        return;
+      alert("Cinema ID is not set. Please set it in localStorage.");
+      return;
     }
 
-    const url = `/customer/cinemas/${cinemaId}/movie/${movie.id}`;
-    console.log("Fetching URL:", url);
-  
-    axiosInstance
-        .get(url)
-        .then((response) => {
-            console.log("Backend Response:", response.data);
-            setSelectedMovie(response.data.data); 
-            setSelectedDate("");
-            setSelectedShowtime("");
-            setSelectedSeats([]);
-        })
-        .catch((error) => {
-            console.error("Error fetching movie details:", error);
-            alert("Failed to fetch movie details. Please try again later.");
-        });
-};
+    const movieUrl = `/customer/cinemas/${cinemaId}/movie/${movie.id}`;
+    const datesUrl = `/customer/cinemas/${cinemaId}/movie/${movie.id}/dates`;
 
-  
+    axiosInstance
+      .get(movieUrl)
+      .then((response) => {
+        setSelectedMovie(response.data.data);
+        setSelectedDate("");
+        setSelectedShowtime("");
+        setSelectedSeats([]);
+        setShowtimes([]);
+      })
+      .catch((error) => {
+        console.error("Error fetching movie details:", error);
+        alert("Failed to fetch movie details. Please try again later.");
+      });
+
+    axiosInstance
+      .get(datesUrl)
+      .then((response) => {
+        if (response.data && response.data.data) {
+          setAvailableDates(response.data.data.map((d) => d.date));
+        } else {
+          setAvailableDates([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching movie dates:", error);
+        alert("Failed to fetch available dates. Please try again later.");
+      });
+  };
 
   const handleSelectDate = (e) => {
-    setSelectedDate(e.target.value);
-    setSelectedShowtime(""); // Reset showtime once a new date is selected
+    const selectedDate = e.target.value;
+    setSelectedDate(selectedDate);
+    setSelectedShowtime("");
+    setSelectedSeats([]);
+    setShowtimes([]);
+
+    if (!selectedDate) return;
+
+    const cinemaId = localStorage.getItem("selectedCinemaId");
+    if (!cinemaId || !selectedMovie) return;
+
+    const showtimesUrl = `/customer/cinemas/${cinemaId}/movie/${selectedMovie.id}/showtimes?date=${selectedDate}`;
+
+    axiosInstance
+      .get(showtimesUrl)
+      .then((response) => {
+        if (response.data && response.data.data) {
+          setShowtimes(response.data.data);
+        } else {
+          setShowtimes([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching showtimes:", error);
+        alert("Failed to fetch showtimes. Please try again later.");
+      });
   };
 
   const handleSelectShowtime = (e) => {
-    setSelectedShowtime(e.target.value);
-    setSelectedSeats([]); // Clear seats when a new showtime is selected
+    const selectedShowtime = e.target.value;
+    setSelectedShowtime(selectedShowtime);
+    setSelectedSeats([]);
+    fetchSeats(selectedShowtime);
   };
 
-  const toggleSeatSelection = (seatNumber) => {
-    if (bookedSeats.includes(seatNumber)) return;
-    setSelectedSeats((prevSelected) =>
-      prevSelected.includes(seatNumber)
-        ? prevSelected.filter((seat) => seat !== seatNumber)
-        : [...prevSelected, seatNumber]
-    );
-  };
-
-  const handleBookSeats = () => {
-    console.log("Checking booking conditions...");
-    if (!selectedDate) {
-      console.log("Date not selected");
-      alert("Please select a date.");
-      return;
-    }
-    if (!selectedShowtime) {
-      console.log("Showtime not selected");
-      alert("Please select a showtime.");
-      return;
-    }
-    if (selectedSeats.length === 0) {
-      console.log("No seats selected");
-      alert("Please select at least one seat.");
+  const toggleSeatSelection = (seatID) => {
+    if (bookedSeats.includes(seatID)) {
       return;
     }
 
-    alert(`Successfully booked seats: ${selectedSeats.join(", ")} for ${selectedMovie.title} on ${selectedDate} at ${selectedShowtime}`);
-    setSelectedSeats([]); 
+    const updatedSelectedSeats = [...selectedSeats];
+    const seatIndex = updatedSelectedSeats.indexOf(seatID);
+
+    if (seatIndex === -1) {
+      updatedSelectedSeats.push(seatID);
+    } else {
+      updatedSelectedSeats.splice(seatIndex, 1);
+    }
+
+    setSelectedSeats(updatedSelectedSeats);
   };
+
+  const handleBookSeats = async () => {
+    if (!selectedDate || !selectedShowtime || selectedSeats.length === 0) {
+      alert("Please select a date, showtime, and seats before booking.");
+      return;
+    }
+
+    try {
+      const cinemaId = localStorage.getItem("selectedCinemaId");
+      if (!cinemaId) {
+        alert("Cinema ID is not set. Please set it in localStorage.");
+        return;
+      }
+
+      const bookingData = {
+        movieId: selectedMovie.id,
+        showtimeId: selectedShowtime,
+        seatIds: selectedSeats,
+        totalPrice: selectedMovie.price * selectedSeats.length,
+        cinemaId: cinemaId,
+      };
+
+      const response = await axiosInstance.post("/customer/bookSeat", bookingData);
+
+      if (response.data && response.data.message) {
+        alert(
+          `Successfully booked seats: ${selectedSeats.join(", ")} for ${selectedMovie.title}`
+        );
+        setSelectedSeats([]); // Clear selected seats
+
+        fetchSeats(selectedShowtime);
+      } else {
+        alert("Failed to book seats. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error booking seats:", error);
+      alert("Failed to book seats. Please try again later.");
+    }
+  };
+
 
   return (
     <div className="movies-page">
       <h1>Last Added Movies</h1>
-      <button type="button" onClick={() => setfilter(true)}>Show All Movies</button>
-      <button type="button" onClick={() => setfilter(false)}>Show Last Added Movies</button>
-      {/* Movie List */}
+      <button onClick={() => setFilter(true)}>Show All Movies</button>
+      <button onClick={() => setFilter(false)}>Show Last Added Movies</button>
+
+      <div className="filters">
+        <input
+          type="text"
+          placeholder="Search by title"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+        />
+        <select value={genreFilter} onChange={(e) => setGenreFilter(e.target.value)}>
+          <option value="">Filter by Genre</option>
+          <option value="Action">Action</option>
+          <option value="Comedy">Comedy</option>
+          <option value="Drama">Drama</option>
+          <option value="Horror">Horror</option>
+        </select>
+      </div>
+
       {!selectedMovie ? (
         <div className="movies-list">
-          {movies?.map((movie) => (
-            <div
-              key={movie.id}
-              className="movie-card"
-              onClick={() => handleSelectMovie(movie)}
-            >
-              <img src={movie.poster} alt={`${movie.title} poster`} />
-              <h3>{movie.title}</h3>
-            </div>
-          ))}
+          {filteredMovies.length > 0 ? (
+            filteredMovies.map((movie) => (
+              <div key={movie.id} className="movie-card" onClick={() => handleSelectMovie(movie)}>
+                <img src={movie.poster} alt={`${movie.title} poster`} />
+                <h3>{movie.title}</h3>
+              </div>
+            ))
+          ) : (
+            <p>No movies available to display.</p>
+          )}
         </div>
       ) : (
         <div className="movie-details">
@@ -137,60 +236,62 @@ const Lastadded = () => {
           <p>{selectedMovie.description}</p>
           <p>Price: ${selectedMovie.price}</p>
           <p>Genre: {selectedMovie.genre}</p>
-          <p>Release Date: {selectedMovie.releaseDate}</p>
+          <p>Release Date: {moment(selectedMovie.createdAt).format('MMMM Do YYYY')}</p>
 
           {/* Date Selection */}
           <select value={selectedDate} onChange={handleSelectDate}>
             <option value="">Select Date</option>
-            <option value={selectedMovie.releaseDate}>
-              {selectedMovie.releaseDate}
-            </option>
+            {availableDates.length > 0 ? (
+              availableDates.map((date) => (
+                <option key={date} value={date}>
+                  {moment(date).format('DD/MM/YYYY')}
+                </option>
+              ))
+            ) : (
+              <option value="">No dates available</option>
+            )}
           </select>
 
-          {/* Showtime Selection (Disabled until a date is selected) */}
-          {selectedDate && (
+          {/* Showtime Selection */}
+          {selectedDate && showtimes.length > 0 && (
             <select value={selectedShowtime} onChange={handleSelectShowtime}>
               <option value="">Select Showtime</option>
-              {selectedMovie.showtimes.map((time) => (
-                <option key={time} value={time}>
-                  {time}
+              {showtimes.map((showtime) => (
+                <option key={showtime.startTime} value={showtime.id}>
+                  {showtime.startTime}
                 </option>
               ))}
             </select>
           )}
 
-          {/* Seat Map (Only visible after selecting a showtime) */}
-          {selectedShowtime && (
-            <div className="seat-map">
-              <h3>Select Seats</h3>
-              <div className="seats">
-                {Array.from({ length: 47 }, (_, i) => i + 1).map((seatNumber) => (
-                  <div
-                    key={seatNumber}
-                    className={`seat ${
-                      bookedSeats.includes(seatNumber)
-                        ? "booked"
-                        : selectedSeats.includes(seatNumber)
-                        ? "selected"
-                        : "available"
-                    }`}
-                    onClick={() => toggleSeatSelection(seatNumber)}
-                  >
-                    {seatNumber}
-                  </div>
-                ))}
-              </div>
+          {seats.length > 0 && (
+            <div className="seats">
+              {seats.map((seat) => (
+                <button
+                  key={seat.seatID}
+                  className={`seat ${bookedSeats.includes(seat.seatID) ? "booked" : selectedSeats.includes(seat.seatID) ? "selected" : ""}`}
+                  onClick={() => toggleSeatSelection(seat.seatID)}
+                  disabled={bookedSeats.includes(seat.seatID)}
+                >
+                  {seat.seatName}
+                </button>
+              ))}
             </div>
           )}
 
-          {/* Actions */}
-          <button
-            onClick={handleBookSeats}
-            disabled={!selectedDate || !selectedShowtime || selectedSeats.length === 0}
-          >
-            Book Seats
+          <button onClick={handleBookSeats} className="book-button">
+            Book Selected Seats
           </button>
-          <button onClick={() => setSelectedMovie(null)}>Back to Movies</button>
+
+          {/* Back to All Movies Button */}
+          <button
+            className="back-button"
+            onClick={() => {
+              window.location.href = window.location.href;
+            }}
+          >
+            Back to All Movies
+          </button>
         </div>
       )}
     </div>
@@ -198,5 +299,3 @@ const Lastadded = () => {
 };
 
 export default Lastadded;
-
-

@@ -10,7 +10,13 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchInterval: 1000, // every minute
+    },
+  },
+});
 
 const App = () => {
   return (
