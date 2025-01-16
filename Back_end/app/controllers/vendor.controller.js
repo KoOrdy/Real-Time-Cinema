@@ -40,7 +40,7 @@ exports.addCinema = async (req, res) => {
             vendorId: req.user.id,
         });
 
-        await redisClient.del(`cinemas:vendor:${req.user.id}`);
+        // await redisClient.del(`cinemas:vendor:${req.user.id}`);
 
         res.status(201).send({ message: "Cinema added successfully!", cinema });
     } catch (error) {
